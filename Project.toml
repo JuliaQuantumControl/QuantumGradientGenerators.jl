@@ -3,11 +3,11 @@ uuid = "a563f35e-61db-434d-8c01-8b9e3ccdfd85"
 authors = ["Michael Goerz <mail@michaelgoerz.net"]
 version = "0.1.0-dev"
 
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+QuantumPropagators = "7bf12567-5742-4b91-a078-644e72a65fc1"
+
 [compat]
+QuantumPropagators = ">=0.3.0"
 julia = "1.6"
-
-[extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-
-[targets]
-test = ["Test"]
