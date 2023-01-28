@@ -8,7 +8,7 @@ using SafeTestsets
     @time @safetestset "Gradient Generator" begin
         include("test_gradgen.jl")
     end
-    
+
     print("\n* Spectral Radius (test_specrad.jl):")
     @time @safetestset "Spectral Radius" begin
         include("test_specrad.jl")

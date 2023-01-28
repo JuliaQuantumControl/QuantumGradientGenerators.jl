@@ -246,4 +246,3 @@ using QuantumPropagators.Controls: evaluate
     @test norm(Ψ̃_out.grad_states[2] - grad_taylor[2]) < 1e-10
 
 end
-

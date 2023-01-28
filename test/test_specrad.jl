@@ -106,4 +106,3 @@ end
     @test norm(G_range_arnoldi - [G_E_min, G_E_max]) < 0.2
 
 end
-
