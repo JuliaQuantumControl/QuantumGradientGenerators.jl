@@ -1,7 +1,12 @@
 using QuantumGradientGenerators
 using Documenter
 
-DocMeta.setdocmeta!(QuantumGradientGenerators, :DocTestSetup, :(using QuantumGradientGenerators); recursive=true)
+DocMeta.setdocmeta!(
+    QuantumGradientGenerators,
+    :DocTestSetup,
+    :(using QuantumGradientGenerators);
+    recursive=true
+)
 
 makedocs(;
     modules=[QuantumGradientGenerators],
@@ -12,14 +17,12 @@ makedocs(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://JuliaQuantumControl.github.io/QuantumGradientGenerators.jl",
         edit_link="master",
-        assets=String[],
+        assets=String[]
     ),
-    pages=[
-        "Home" => "index.md",
-    ],
+    pages=["Home" => "index.md",]
 )
 
 deploydocs(;
     repo="github.com/JuliaQuantumControl/QuantumGradientGenerators.jl",
-    devbranch="master",
+    devbranch="master"
 )
