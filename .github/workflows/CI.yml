@@ -1,10 +1,10 @@
 name: CI
 on:
-  push:
-    branches:
-      - master
-    tags: ['*']
-  pull_request:
+  - push
+  - pull_request
+env:
+  GKSwstype: 100
+  JULIA_PKG_PRECOMPILE_AUTO: false
 concurrency:
   # Skip intermediate builds: always.
   # Cancel intermediate builds: only if it is a pull request build.
@@ -23,7 +23,6 @@ jobs:
           - ubuntu-latest
         arch:
           - x64
-          - x86
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
@@ -31,9 +30,17 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v1
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-runtest@v1
+      - run: |
+          # Instantiate Pkg
+          wget https://raw.githubusercontent.com/JuliaQuantumControl/JuliaQuantumControl/master/scripts/installorg.jl
+          julia --project=test installorg.jl
+      - run: |
+          # Run tests
+          julia --project=test --color=auto --startup-file=yes --code-coverage="user" --depwarn="yes" --check-bounds="yes" -e 'include("test/runtests.jl")'
       - uses: julia-actions/julia-processcoverage@v1
+      - run: |
+          # Summarize coverage
+          julia --project=test -e 'using QuantumControlBase.TestUtils; show_coverage();'
       - uses: codecov/codecov-action@v2
         with:
           files: lcov.info
@@ -47,13 +54,63 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: '1'
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-docdeploy@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: |
-          julia --project=docs -e '
+          # Install Python dependencies
+          set -x
+          /usr/bin/python3 -m pip install zip-files
+      - run: |
+          # Instantiate Pkg
+          wget https://raw.githubusercontent.com/JuliaQuantumControl/JuliaQuantumControl/master/scripts/installorg.jl
+          julia --project=test installorg.jl
+      - run: |
+          # Run doctests
+          julia --project=test -e '
             using Documenter: DocMeta, doctest
             using QuantumGradientGenerators
             DocMeta.setdocmeta!(QuantumGradientGenerators, :DocTestSetup, :(using QuantumGradientGenerators); recursive=true)
             doctest(QuantumGradientGenerators)'
+      - run: |
+          # Make documentation
+          julia --project=test docs/make.jl
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+      - name: Zip the HTML documentation
+        run: zip-folder --debug --auto-root --outfile "docs.zip" docs/build
+      - uses: actions/upload-artifact@v2
+        name: Upload documentation artifacts
+        with:
+          name: QuantumGradientGenerators
+          # We need at least two files in the artifact to avoid a weird
+          # double-zip file. Hence README.md
+          path: |
+            README.md
+            ./docs.zip
+  codestyle:
+    name: Codestyle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: '1'
+      - name: Get codestyle settings
+        run: wget https://raw.githubusercontent.com/JuliaQuantumControl/JuliaQuantumControl/master/.JuliaFormatter.toml
+      - name: Install JuliaFormatter and format
+        # This will use the latest version by default but you can set the version like so:
+        #
+        # julia  -e 'using Pkg; Pkg.add(PackageSpec(name="JuliaFormatter", version="0.13.0"))'
+        run: |
+          julia  -e 'using Pkg; Pkg.add(PackageSpec(name="JuliaFormatter"))'
+          julia  -e 'using JuliaFormatter; format(".", verbose=true)'
+      - name: Format check
+        run: |
+          julia -e '
+          out = Cmd(`git diff --name-only`) |> read |> String
+          if out == ""
+              exit(0)
+          else
+              @error "Some files have not been formatted !!!"
+              write(stdout, out)
+              exit(1)
+          end'
