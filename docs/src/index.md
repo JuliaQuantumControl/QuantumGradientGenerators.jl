@@ -6,9 +6,13 @@ CurrentModule = QuantumGradientGenerators
 
 Documentation for [QuantumGradientGenerators](https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl).
 
-```@index
+## Contents
+
+```@contents
+Pages = ["api.md"]
+Depth = 2
 ```
 
-```@autodocs
-Modules = [QuantumGradientGenerators]
-```
+## History
+
+See the [Releases](https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases) on Github.
