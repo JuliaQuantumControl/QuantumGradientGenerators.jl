@@ -1,7 +1,7 @@
 using Test
 using LinearAlgebra
 using QuantumPropagators.SpectralRange: specrange
-using QuantumControlBase: GradGenerator
+using QuantumGradientGenerators: GradGenerator
 using QuantumControlBase.TestUtils
 using QuantumPropagators.Controls: evaluate
 

@@ -2,7 +2,7 @@ using Test
 using LinearAlgebra
 using QuantumPropagators: init_prop, prop_step!
 using QuantumPropagators.Newton
-using QuantumControlBase: GradGenerator, GradgenOperator, GradVector, resetgradvec!
+using QuantumGradientGenerators: GradGenerator, GradgenOperator, GradVector, resetgradvec!
 using QuantumControlBase.TestUtils
 using Zygote
 using QuantumPropagators.Controls: evaluate
