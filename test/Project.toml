@@ -15,6 +15,7 @@ QuantumGradientGenerators = "a563f35e-61db-434d-8c01-8b9e3ccdfd85"
 QuantumPropagators = "7bf12567-5742-4b91-a078-644e72a65fc1"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TwoQubitWeylChamber = "cad078a0-0012-46f4-b55e-a945d44e115b"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]

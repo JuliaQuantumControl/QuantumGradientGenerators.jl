@@ -1,6 +1,6 @@
 name = "QuantumGradientGenerators"
 uuid = "a563f35e-61db-434d-8c01-8b9e3ccdfd85"
-authors = ["Michael Goerz <mail@michaelgoerz.net"]
+authors = ["Michael Goerz <mail@michaelgoerz.net>"]
 version = "0.1.0+dev"
 
 [deps]

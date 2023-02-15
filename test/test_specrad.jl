@@ -2,7 +2,7 @@ using Test
 using LinearAlgebra
 using QuantumPropagators.SpectralRange: specrange
 using QuantumGradientGenerators: GradGenerator
-using QuantumControlBase.TestUtils
+using QuantumControlTestUtils.RandomObjects: random_matrix
 using QuantumPropagators.Controls: evaluate
 
 
@@ -10,9 +10,9 @@ using QuantumPropagators.Controls: evaluate
 
     N = 10  # size of Hilbert space
     ρ = 1.0  # spectral radius
-    Ĥ₀ = random_hermitian_matrix(N, ρ)
-    Ĥ₁ = random_hermitian_matrix(N, ρ)
-    Ĥ₂ = random_hermitian_matrix(N, ρ)
+    Ĥ₀ = random_matrix(N; hermitian=true, spectral_radius=ρ)
+    Ĥ₁ = random_matrix(N; hermitian=true, spectral_radius=ρ)
+    Ĥ₂ = random_matrix(N; hermitian=true, spectral_radius=ρ)
     Zero = zeros(ComplexF64, N, N)
     ϵ₁ = t -> 1.0
     ϵ₂ = t -> 1.0
@@ -62,10 +62,10 @@ end
 @testset "Gradgen-sparse specrad" begin
     N = 100  # size of Hilbert space
     ρ = 1.0  # spectral radius
-    sparsity = 0.1
-    Ĥ₀ = random_hermitian_sparse_matrix(N, ρ, sparsity)
-    Ĥ₁ = random_hermitian_sparse_matrix(N, ρ, sparsity)
-    Ĥ₂ = random_hermitian_sparse_matrix(N, ρ, sparsity)
+    density = 0.1
+    Ĥ₀ = random_matrix(N; hermitian=true, spectral_radius=ρ, density)
+    Ĥ₁ = random_matrix(N; hermitian=true, spectral_radius=ρ, density)
+    Ĥ₂ = random_matrix(N; hermitian=true, spectral_radius=ρ, density)
     Zero = zeros(ComplexF64, N, N)
     ϵ₁ = t -> 1.0
     ϵ₂ = t -> 1.0

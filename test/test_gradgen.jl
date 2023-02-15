@@ -3,7 +3,7 @@ using LinearAlgebra
 using QuantumPropagators: init_prop, prop_step!
 using QuantumPropagators.Newton
 using QuantumGradientGenerators: GradGenerator, GradgenOperator, GradVector, resetgradvec!
-using QuantumControlBase.TestUtils
+using QuantumControlTestUtils.RandomObjects: random_matrix, random_state_vector
 using Zygote
 using QuantumPropagators.Controls: evaluate
 
@@ -13,9 +13,9 @@ using QuantumPropagators.Controls: evaluate
     N = 10  # size of Hilbert space
     ρ = 1.0  # spectral radius
     # We'll test with non-Hermitian Hamiltonians
-    Ĥ₀ = random_complex_matrix(N, ρ)
-    Ĥ₁ = random_complex_matrix(N, ρ)
-    Ĥ₂ = random_complex_matrix(N, ρ)
+    Ĥ₀ = random_matrix(N)
+    Ĥ₁ = random_matrix(N)
+    Ĥ₂ = random_matrix(N)
     Zero = zeros(ComplexF64, N, N)
     ϵ₁(t) = 1.0
     ϵ₂(t) = 1.0
