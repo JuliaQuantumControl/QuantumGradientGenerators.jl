@@ -37,10 +37,15 @@ jobs:
       - run: |
           # Run tests
           julia --project=test --color=auto --startup-file=yes --code-coverage="user" --depwarn="yes" --check-bounds="yes" -e 'include("test/runtests.jl")'
+      - run: |
+          # Run upstream "GRAPE" tests
+          julia --project=test -e '
+            using Pkg
+            Pkg.test("GRAPE", coverage=true)'
       - uses: julia-actions/julia-processcoverage@v1
       - run: |
           # Summarize coverage
-          julia --project=test -e 'using QuantumControlBase.TestUtils; show_coverage();'
+          julia --project=test -e 'using QuantumControlTestUtils; show_coverage();'
       - uses: codecov/codecov-action@v2
         with:
           files: lcov.info
