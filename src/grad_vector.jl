@@ -1,4 +1,4 @@
-import QuantumPropagators
+import QuantumControlBase.QuantumPropagators: _exp_prop_convert_state
 
 
 @doc raw"""Extended state-vector for the dynamic gradient.
@@ -75,4 +75,4 @@ function resetgradvec!(Ψ̃::GradVector{num_controls,T}, Ψ::T) where {num_contr
 end
 
 
-QuantumPropagators._exp_prop_convert_state(::GradVector) = Vector{ComplexF64}
+_exp_prop_convert_state(::GradVector) = Vector{ComplexF64}

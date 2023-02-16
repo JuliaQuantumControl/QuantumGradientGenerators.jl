@@ -1,4 +1,4 @@
-import QuantumPropagators.Controls: evaluate, evaluate!
+import QuantumControlBase.QuantumPropagators.Controls: evaluate, evaluate!
 
 
 function evaluate(O::GradgenOperator, args...; kwargs...)

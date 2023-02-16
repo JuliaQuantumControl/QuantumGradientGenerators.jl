@@ -1,5 +1,6 @@
-import QuantumPropagators
-import QuantumPropagators.Controls: get_controls
+import QuantumControlBase.QuantumPropagators: has_real_eigvals, _exp_prop_convert_operator
+import QuantumControlBase.QuantumPropagators.Controls: get_controls
+import QuantumControlBase.QuantumPropagators.SpectralRange: random_state
 
 
 """Static generator for the dynamic gradient.
@@ -30,19 +31,15 @@ end
 # Upper triangular block matrices have eigenvalues only from the diagonal
 # blocks. This is an example for a matrix that has real eigenvalues despite not
 # being Hermitian
-QuantumPropagators.has_real_eigvals(G::GradgenOperator) =
-    QuantumPropagators.has_real_eigvals(G.G)
+has_real_eigvals(G::GradgenOperator) = has_real_eigvals(G.G)
 
 
-function QuantumPropagators.SpectralRange.random_state(H::GradgenOperator)
-    state = QuantumPropagators.SpectralRange.random_state(H.G)
+function random_state(H::GradgenOperator)
+    state = random_state(H.G)
     num_controls = length(H.control_deriv_ops)
-    grad_states = [
-        QuantumPropagators.SpectralRange.random_state(H.G) for
-        i ∈ eachindex(H.control_deriv_ops)
-    ]
+    grad_states = [random_state(H.G) for i ∈ eachindex(H.control_deriv_ops)]
     return GradVector{num_controls,typeof(state)}(state, grad_states)
 end
 
 
-QuantumPropagators._exp_prop_convert_operator(::GradgenOperator) = Matrix{ComplexF64}
+_exp_prop_convert_operator(::GradgenOperator) = Matrix{ComplexF64}

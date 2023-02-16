@@ -1,6 +1,6 @@
-import QuantumPropagators
 using QuantumControlBase: get_control_derivs
-import QuantumPropagators.Controls: get_controls
+import QuantumControlBase.QuantumPropagators.Controls: get_controls
+import QuantumControlBase.QuantumPropagators: _exp_prop_convert_operator
 
 
 @doc raw"""Extended generator for the standard dynamic gradient.
@@ -50,4 +50,4 @@ function get_controls(gradgen::GradGenerator)
 end
 
 
-QuantumPropagators._exp_prop_convert_operator(::GradGenerator) = Matrix{ComplexF64}
+_exp_prop_convert_operator(::GradGenerator) = Matrix{ComplexF64}
