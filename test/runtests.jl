@@ -14,4 +14,9 @@ using SafeTestsets
         include("test_specrad.jl")
     end
 
+    print("\n* Interface (test_interface.jl):")
+    @time @safetestset "Interface" begin
+        include("test_interface.jl")
+    end
+
 end;

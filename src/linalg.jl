@@ -1,13 +1,14 @@
 import LinearAlgebra
-import Base: -, *
+import Base: +, -, *
 
 
-function LinearAlgebra.mul!(Φ::GradVector, G::GradgenOperator, Ψ::GradVector)
-    LinearAlgebra.mul!(Φ.state, G.G, Ψ.state)
+function LinearAlgebra.mul!(Φ::GradVector, G::GradgenOperator, Ψ::GradVector, α, β)
+    LinearAlgebra.mul!(Φ.state, G.G, Ψ.state, α, β)
     for i = 1:length(Ψ.grad_states)
-        LinearAlgebra.mul!(Φ.grad_states[i], G.G, Ψ.grad_states[i])
-        LinearAlgebra.mul!(Φ.grad_states[i], G.control_deriv_ops[i], Ψ.state, 1, 1)
+        LinearAlgebra.mul!(Φ.grad_states[i], G.G, Ψ.grad_states[i], α, β)
+        LinearAlgebra.mul!(Φ.grad_states[i], G.control_deriv_ops[i], Ψ.state, α, 1)
     end
+    return Φ
 end
 
 
@@ -16,6 +17,7 @@ function LinearAlgebra.lmul!(c, Ψ::GradVector)
     for i ∈ eachindex(Ψ.grad_states)
         LinearAlgebra.lmul!(c, Ψ.grad_states[i])
     end
+    return Ψ
 end
 
 
@@ -24,6 +26,7 @@ function LinearAlgebra.axpy!(a, X::GradVector, Y::GradVector)
     for i ∈ eachindex(X.grad_states)
         LinearAlgebra.axpy!(a, X.grad_states[i], Y.grad_states[i])
     end
+    return Y
 end
 
 
@@ -101,6 +104,7 @@ function Base.fill!(Ψ::GradVector, v)
     for i = 1:length(Ψ.grad_states)
         Base.fill!(Ψ.grad_states[i], v)
     end
+    return Ψ
 end
 
 
@@ -114,12 +118,40 @@ function -(Ψ::GradVector, Φ::GradVector)
 end
 
 
+function +(Ψ::GradVector, Φ::GradVector)
+    res = copy(Ψ)
+    LinearAlgebra.axpy!(1, Φ.state, res.state)
+    for i = 1:length(Ψ.grad_states)
+        LinearAlgebra.axpy!(1, Φ.grad_states[i], res.grad_states[i])
+    end
+    return res
+end
+
+
+function *(α::Number, v::GradVector{num_controls,T}) where {num_controls,T}
+    return GradVector{num_controls,T}(α * v.state, [(α * ϕ) for ϕ in v.grad_states])
+end
+
+
+function *(v::GradVector{num_controls,T}, α::Number) where {num_controls,T}
+    return α * v
+end
+
+
 function *(G::GradgenOperator{num_controls,GT,CGT}, α::Number) where {num_controls,GT,CGT}
     GradgenOperator{num_controls,GT,CGT}(G.G * α, [CG * α for CG in G.control_deriv_ops])
 end
 
-
 *(α::Number, G::GradgenOperator) = *(G::GradgenOperator, α::Number)
+
+
+function *(
+    G::GradgenOperator{num_controls,GT,CGT},
+    Ψ::GradVector{num_controls,ST}
+) where {num_controls,GT,CGT,ST}
+    Φ = similar(Ψ)
+    return LinearAlgebra.mul!(Φ, G, Ψ)
+end
 
 
 @inline function convert_gradgen_to_dense(G)
