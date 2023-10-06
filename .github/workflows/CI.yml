@@ -52,7 +52,7 @@ jobs:
       - run: |
           # Summarize coverage
           julia --project=test -e 'using QuantumControlTestUtils; show_coverage();'
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v3
         with:
           files: lcov.info
   docs:
