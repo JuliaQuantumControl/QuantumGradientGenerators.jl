@@ -38,7 +38,7 @@ pkg> add QuantumGradientGenerators
 
 Note that this package is not intended for direct use. Instead, it serves as a building block for implementing quantum control methods, e.g. in the [GRAPE][] package.
 
-For development usage withing the [JuliaQuantumControl][] organization, see the [organization development notes](https://github.com/JuliaQuantumControl#development).
+For development usage within the [JuliaQuantumControl][] organization, see the [organization development notes](https://github.com/JuliaQuantumControl#development).
 
 
 [JuliaQuantumControl]: https://github.com/JuliaQuantumControl

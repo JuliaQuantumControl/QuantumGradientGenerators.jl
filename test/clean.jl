@@ -18,9 +18,9 @@ function clean(; distclean=false, _exit=true)
     for folder in [ROOT, joinpath(ROOT, "src"), joinpath(ROOT, "test")]
         append!(CLEAN, _glob(folder, ".cov"))
     end
-    _push!(CLEAN, joinpath(ROOT, "coverage"))
     _push!(CLEAN, joinpath(ROOT, "docs", "build"))
-    _push!(CLEAN, joinpath(ROOT, "lcov.info"))
+    append!(CLEAN, _glob(ROOT, ".info"))
+    append!(CLEAN, _glob(joinpath(ROOT, ".coverage"), ".info"))
     ###########################################################################
 
     ###########################################################################
