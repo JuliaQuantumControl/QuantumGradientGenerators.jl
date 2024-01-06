@@ -1,5 +1,6 @@
 using QuantumGradientGenerators
 using Documenter
+using DocumenterInterLinks
 using Pkg
 
 DocMeta.setdocmeta!(
@@ -25,7 +26,14 @@ makedocs(;
     format=Documenter.HTML(;
         prettyurls=true,
         canonical="https://juliaquantumcontrol.github.io/QuantumGradientGenerators.jl",
-        assets=String[],
+        assets=[
+            asset(
+                "https://juliaquantumcontrol.github.io/QuantumControl.jl/dev/assets/topbar/topbar.css"
+            ),
+            asset(
+                "https://juliaquantumcontrol.github.io/QuantumControl.jl/dev/assets/topbar/topbar.js"
+            ),
+        ],
         footer="[$NAME.jl]($GITHUB) v$VERSION docs powered by [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl)."
     ),
     pages=["Home" => "index.md", "API" => "api.md",]

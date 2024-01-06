@@ -1,3 +1,4 @@
+using Random: GLOBAL_RNG
 import QuantumControlBase.QuantumPropagators: _exp_prop_convert_operator
 import QuantumControlBase.QuantumPropagators.Controls: get_controls
 import QuantumControlBase.QuantumPropagators.SpectralRange: random_state
@@ -28,10 +29,10 @@ function get_controls(O1::GradgenOperator)
 end
 
 
-function random_state(H::GradgenOperator)
-    state = random_state(H.G)
+function random_state(H::GradgenOperator; rng=GLOBAL_RNG, _...)
+    state = random_state(H.G; rng)
     num_controls = length(H.control_deriv_ops)
-    grad_states = [random_state(H.G) for i ∈ eachindex(H.control_deriv_ops)]
+    grad_states = [random_state(H.G; rng) for i ∈ eachindex(H.control_deriv_ops)]
     return GradVector{num_controls,typeof(state)}(state, grad_states)
 end
 
