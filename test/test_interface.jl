@@ -1,8 +1,9 @@
 using Test
-using QuantumControl: hamiltonian
-using QuantumControl.Controls: get_controls
+using QuantumPropagators.Generators: hamiltonian
+using QuantumPropagators.Controls: get_controls
 using QuantumControlTestUtils.RandomObjects: random_matrix, random_state_vector
-using QuantumControl.Interfaces: check_generator, check_state
+using QuantumControlBase: check_generator
+using QuantumPropagators.Interfaces: check_state
 using QuantumGradientGenerators: GradGenerator, GradVector
 using LinearAlgebra: norm
 
