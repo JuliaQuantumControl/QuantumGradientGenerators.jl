@@ -1,5 +1,6 @@
 using QuantumControlBase: get_control_derivs
 import QuantumControlBase.QuantumPropagators.Controls: get_controls
+import QuantumControlBase.QuantumPropagators.Controls: get_parameters
 import QuantumControlBase.QuantumPropagators: _exp_prop_convert_operator
 
 
@@ -47,6 +48,11 @@ end
 
 function get_controls(gradgen::GradGenerator)
     return get_controls(gradgen.G)
+end
+
+
+function get_parameters(gradgen::GradGenerator)
+    return get_parameters(gradgen.G)
 end
 
 
