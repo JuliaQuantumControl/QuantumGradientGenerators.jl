@@ -3,12 +3,6 @@ using Documenter
 using DocumenterInterLinks
 using Pkg
 
-DocMeta.setdocmeta!(
-    QuantumGradientGenerators,
-    :DocTestSetup,
-    :(using QuantumGradientGenerators);
-    recursive=true
-)
 
 PROJECT_TOML = Pkg.TOML.parsefile(joinpath(@__DIR__, "..", "Project.toml"))
 VERSION = PROJECT_TOML["version"]
@@ -16,13 +10,24 @@ NAME = PROJECT_TOML["name"]
 AUTHORS = join(PROJECT_TOML["authors"], ", ") * " and contributors"
 GITHUB = "https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl"
 
+DEV_OR_STABLE = "stable/"
+if endswith(VERSION, "dev")
+    DEV_OR_STABLE = "dev/"
+end
+
+links = InterLinks(
+    "Julia" => "https://docs.julialang.org/en/v1/",
+    "QuantumPropagators" => "https://juliaquantumcontrol.github.io/QuantumPropagators.jl/$DEV_OR_STABLE",
+    "QuantumControl" => "https://juliaquantumcontrol.github.io/QuantumControl.jl/$DEV_OR_STABLE",
+)
+
 println("Starting makedocs")
 
 makedocs(;
+    plugins=[links],
     authors=AUTHORS,
     sitename="QuantumGradientGenerators.jl",
-    modules=[QuantumGradientGenerators],
-    repo="https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/blob/{commit}{path}#{line}",
+    doctest=false,
     format=Documenter.HTML(;
         prettyurls=true,
         canonical="https://juliaquantumcontrol.github.io/QuantumGradientGenerators.jl",
@@ -41,7 +46,4 @@ makedocs(;
 
 println("Finished makedocs")
 
-deploydocs(;
-    repo="github.com/JuliaQuantumControl/QuantumGradientGenerators.jl",
-    devbranch="master"
-)
+deploydocs(; repo="github.com/JuliaQuantumControl/QuantumGradientGenerators.jl",)

@@ -1,4 +1,5 @@
 import QuantumControlBase.QuantumPropagators: _exp_prop_convert_state
+import QuantumControlBase.QuantumPropagators.Interfaces: supports_inplace
 
 
 @doc raw"""Extended state-vector for the dynamic gradient.
@@ -34,6 +35,8 @@ e^{-i G̃ dt} \begin{pmatrix} 0 \\ \vdots \\ 0 \\ |Ψ⟩ \end{pmatrix}
 e^{-i Ĥ dt} |Ψ⟩
 \end{pmatrix}.
 ```
+
+Upon initialization, ``|Ψ̃₁⟩…|Ψ̃ₙ⟩`` are zero.
 """
 struct GradVector{num_controls,T}
     state::T
@@ -41,10 +44,7 @@ struct GradVector{num_controls,T}
 end
 
 function GradVector(Ψ::T, num_controls::Int64) where {T}
-    grad_states = [similar(Ψ) for _ = 1:num_controls]
-    for i = 1:num_controls
-        fill!(grad_states[i], 0.0)
-    end
+    grad_states = [zero(Ψ) for _ = 1:num_controls]
     GradVector{num_controls,T}(copy(Ψ), grad_states)
 end
 
@@ -55,18 +55,30 @@ end
 resetgradvec!(Ψ̃::GradVector)
 ```
 
-zeroes out `Ψ̃.grad_states` but leaves `Ψ̃.state` unaffected.
+zeroes out `Ψ̃.grad_states` but leaves `Ψ̃.state` unaffected. This is possible
+whether or not Ψ̃ supports in-place operations
+([`QuantumPropagators.Interfaces.supports_inplace`](@ref))
 
 ```julia
 resetgradvec!(Ψ̃::GradVector, Ψ)
 ```
 
-additionally sets `Ψ̃.state` to `Ψ`.
+additionally sets `Ψ̃.state` to `Ψ`, which requires that `Ψ̃.state` supports
+in-place operations.
+
+Returns `Ψ̃`.
 """
 function resetgradvec!(Ψ̃::GradVector)
-    for i = 1:length(Ψ̃.grad_states)
-        fill!(Ψ̃.grad_states[i], 0.0)
+    if supports_inplace(Ψ̃)
+        for i in eachindex(Ψ̃.grad_states)
+            fill!(Ψ̃.grad_states[i], 0.0)
+        end
+    else
+        for i in eachindex(Ψ̃.grad_states)
+            Ψ̃.grad_states[i] = zero(Ψ̃.state)
+        end
     end
+    return Ψ̃
 end
 
 function resetgradvec!(Ψ̃::GradVector{num_controls,T}, Ψ::T) where {num_controls,T}
@@ -76,3 +88,5 @@ end
 
 
 _exp_prop_convert_state(::GradVector) = Vector{ComplexF64}
+
+supports_inplace(Ψ̃::GradVector) = supports_inplace(Ψ̃.state)

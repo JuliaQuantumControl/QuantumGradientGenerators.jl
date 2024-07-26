@@ -65,12 +65,8 @@ function Base.copyto!(dest::GradVector, src::GradVector)
 end
 
 
-function Base.copy(Ψ::GradVector)
-    Φ = GradVector(Ψ.state, length(Ψ.grad_states))
-    for i = 1:length(Ψ.grad_states)
-        copyto!(Φ.grad_states[i], Ψ.grad_states[i])
-    end
-    return Φ
+function Base.copy(Ψ::GradVector{num_controls,T}) where {num_controls,T}
+    return GradVector{num_controls,T}(copy(Ψ.state), [copy(ϕ) for ϕ in Ψ.grad_states])
 end
 
 
@@ -108,23 +104,30 @@ function Base.fill!(Ψ::GradVector, v)
 end
 
 
-function -(Ψ::GradVector, Φ::GradVector)
-    res = copy(Ψ)
-    LinearAlgebra.axpy!(-1, Φ.state, res.state)
-    for i = 1:length(Ψ.grad_states)
-        LinearAlgebra.axpy!(-1, Φ.grad_states[i], res.grad_states[i])
-    end
-    return res
+function Base.zero(Ψ::GradVector{num_controls,T}) where {num_controls,T}
+    return GradVector{num_controls,T}(zero(Ψ.state), [zero(ϕ) for ϕ ∈ Ψ.grad_states])
 end
 
 
-function +(Ψ::GradVector, Φ::GradVector)
-    res = copy(Ψ)
-    LinearAlgebra.axpy!(1, Φ.state, res.state)
-    for i = 1:length(Ψ.grad_states)
-        LinearAlgebra.axpy!(1, Φ.grad_states[i], res.grad_states[i])
-    end
-    return res
+function -(
+    Ψ::GradVector{num_controls,T},
+    Φ::GradVector{num_controls,T}
+) where {num_controls,T}
+    return GradVector{num_controls,T}(
+        Ψ.state - Φ.state,
+        [a - b for (a, b) in zip(Ψ.grad_states, Φ.grad_states)]
+    )
+end
+
+
+function +(
+    Ψ::GradVector{num_controls,T},
+    Φ::GradVector{num_controls,T}
+) where {num_controls,T}
+    return GradVector{num_controls,T}(
+        Ψ.state + Φ.state,
+        [a + b for (a, b) in zip(Ψ.grad_states, Φ.grad_states)]
+    )
 end
 
 
@@ -149,8 +152,12 @@ function *(
     G::GradgenOperator{num_controls,GT,CGT},
     Ψ::GradVector{num_controls,ST}
 ) where {num_controls,GT,CGT,ST}
-    Φ = similar(Ψ)
-    return LinearAlgebra.mul!(Φ, G, Ψ)
+    state = G.G * Ψ.state
+    grad_states = [G.G * ϕ for ϕ in Ψ.grad_states]
+    for (i, Hₙ) in enumerate(G.control_deriv_ops)
+        grad_states[i] += Hₙ * Ψ.state
+    end
+    return GradVector{num_controls,ST}(state, grad_states)
 end
 
 
@@ -211,15 +218,17 @@ function Base.convert(::Type{Vector{ComplexF64}}, gradvec::GradVector)
 end
 
 
-function Base.convert(::Type{GradVector{num_controls,T}}, vec::T) where {num_controls,T}
+function Base.convert(
+    ::Type{GradVector{num_controls,T}},
+    vec::AbstractVector
+) where {num_controls,T}
     L = num_controls
     N = length(vec) ÷ (L + 1)  # dimension of state
     @assert length(vec) == (L + 1) * N
-    grad_states = [vec[(i-1)*N+1:i*N] for i = 1:L]
-    state = vec[L*N+1:(L+1)*N]
+    grad_states = [convert(T, vec[(i-1)*N+1:i*N]) for i = 1:L]
+    state = convert(T, vec[L*N+1:(L+1)*N])
     return GradVector{num_controls,T}(state, grad_states)
 end
-
 
 function Base.Array{T}(G::GradgenOperator) where {T}
     N, M = size(G.G)
