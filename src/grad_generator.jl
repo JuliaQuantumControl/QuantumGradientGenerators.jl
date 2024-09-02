@@ -1,7 +1,7 @@
-using QuantumControlBase: get_control_derivs
-import QuantumControlBase.QuantumPropagators.Controls: get_controls
-import QuantumControlBase.QuantumPropagators.Controls: get_parameters
-import QuantumControlBase.QuantumPropagators: _exp_prop_convert_operator
+using QuantumControl.Controls: get_control_derivs
+import QuantumControl.QuantumPropagators.Controls: get_controls
+import QuantumControl.QuantumPropagators.Controls: get_parameters
+import QuantumControl.QuantumPropagators: _exp_prop_convert_operator
 
 
 @doc raw"""Extended generator for the standard dynamic gradient.

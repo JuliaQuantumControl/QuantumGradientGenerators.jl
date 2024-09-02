@@ -1,5 +1,5 @@
-import QuantumControlBase.QuantumPropagators: _exp_prop_convert_state
-import QuantumControlBase.QuantumPropagators.Interfaces: supports_inplace
+import QuantumControl.QuantumPropagators: _exp_prop_convert_state
+import QuantumControl.QuantumPropagators.Interfaces: supports_inplace
 
 
 @doc raw"""Extended state-vector for the dynamic gradient.

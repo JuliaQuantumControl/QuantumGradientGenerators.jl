@@ -1,8 +1,8 @@
 using Random: GLOBAL_RNG
-import QuantumControlBase.QuantumPropagators: _exp_prop_convert_operator
-import QuantumControlBase.QuantumPropagators.Controls: get_controls
-import QuantumControlBase.QuantumPropagators.SpectralRange: random_state
-import QuantumControlBase.QuantumPropagators.Interfaces: supports_inplace
+import QuantumControl.QuantumPropagators: _exp_prop_convert_operator
+import QuantumControl.QuantumPropagators.Controls: get_controls
+import QuantumControl.QuantumPropagators.SpectralRange: random_state
+import QuantumControl.QuantumPropagators.Interfaces: supports_inplace
 
 
 """Static generator for the dynamic gradient.

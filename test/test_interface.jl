@@ -2,7 +2,7 @@ using Test
 using QuantumPropagators.Generators: hamiltonian
 using QuantumPropagators.Controls: get_controls
 using QuantumControlTestUtils.RandomObjects: random_matrix, random_state_vector
-using QuantumControlBase: check_generator
+using QuantumControl.Interfaces: check_generator
 using QuantumPropagators.Interfaces: check_state
 using QuantumGradientGenerators: GradGenerator, GradVector
 using StaticArrays: SVector, SMatrix
