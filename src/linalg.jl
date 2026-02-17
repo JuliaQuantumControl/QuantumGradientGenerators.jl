@@ -75,8 +75,16 @@ function Base.length(Ψ::GradVector)
 end
 
 
-function Base.size(G::GradgenOperator)
-    return Base.size(G.G)
+function Base.size(O::GradgenOperator{num_controls,GT,CGT}) where {num_controls,GT,CGT}
+    return (num_controls + 1) .* size(O.G)
+end
+
+
+function Base.size(
+    O::GradgenOperator{num_controls,GT,CGT},
+    dim::Integer
+) where {num_controls,GT,CGT}
+    return (num_controls + 1) * size(O.G, dim)
 end
 
 
@@ -88,6 +96,9 @@ function Base.similar(G::GradgenOperator{num_controls,GT,CGT}) where {num_contro
     return GradgenOperator{num_controls,GT,CGT}(similar(G.G), similar(G.control_deriv_ops))
 end
 
+function Base.eltype(O::GradgenOperator{num_controls,GT,CGT}) where {num_controls,GT,CGT}
+    return promote_type(eltype(GT), eltype(CGT))
+end
 
 function Base.copyto!(dest::GradgenOperator, src::GradgenOperator)
     copyto!(dest.G, src.G)
@@ -161,7 +172,7 @@ function *(
 end
 
 
-@inline function convert_gradgen_to_dense(G)
+@inline function convert_gradgen_to_dense(G::GradGenerator)
     N = size(G.G)[1]
     L = length(G.control_derivs)
     G_full = zeros(eltype(G.G), N * (L + 1), N * (L + 1))
@@ -169,15 +180,15 @@ end
 end
 
 
-@inline function convert_gradgen_to_dense!(G_full, G)
+@inline function convert_gradgen_to_dense!(G_full, G::GradGenerator)
     N = size(G.G)[1]
     L = length(G.control_derivs)
-    @inbounds for i = 1:L+1
-        G_full[(i-1)*N+1:i*N, (i-1)*N+1:i*N] .= G.G
+    @inbounds for i = 1:(L+1)
+        G_full[((i-1)*N+1):(i*N), ((i-1)*N+1):(i*N)] .= G.G
     end
     # Set the control-derivatives in the last (block-)column
     @inbounds for i = 1:L
-        G_full[(i-1)*N+1:i*N, L*N+1:(L+1)*N] .= G.control_derivs[i]
+        G_full[((i-1)*N+1):(i*N), (L*N+1):((L+1)*N)] .= G.control_derivs[i]
     end
     return G_full
 end
@@ -195,9 +206,9 @@ end
     N = length(Ψ.state)
     L = length(Ψ.grad_states)
     @inbounds for i = 1:L
-        Ψ_full[(i-1)*N+1:i*N] .= Ψ.grad_states[i]
+        Ψ_full[((i-1)*N+1):(i*N)] .= Ψ.grad_states[i]
     end
-    @inbounds Ψ_full[L*N+1:(L+1)*N] .= Ψ.state
+    @inbounds Ψ_full[(L*N+1):((L+1)*N)] .= Ψ.state
     return Ψ_full
 end
 
@@ -206,9 +217,9 @@ end
     N = length(Ψ.state)
     L = length(Ψ.grad_states)
     @inbounds for i = 1:L
-        Ψ.grad_states[i] .= Ψ_full[(i-1)*N+1:i*N]
+        Ψ.grad_states[i] .= Ψ_full[((i-1)*N+1):(i*N)]
     end
-    @inbounds Ψ.state .= Ψ_full[L*N+1:(L+1)*N]
+    @inbounds Ψ.state .= Ψ_full[(L*N+1):((L+1)*N)]
     return Ψ
 end
 
@@ -225,8 +236,8 @@ function Base.convert(
     L = num_controls
     N = length(vec) ÷ (L + 1)  # dimension of state
     @assert length(vec) == (L + 1) * N
-    grad_states = [convert(T, vec[(i-1)*N+1:i*N]) for i = 1:L]
-    state = convert(T, vec[L*N+1:(L+1)*N])
+    grad_states = [convert(T, vec[((i-1)*N+1):(i*N)]) for i = 1:L]
+    state = convert(T, vec[(L*N+1):((L+1)*N)])
     return GradVector{num_controls,T}(state, grad_states)
 end
 
@@ -236,8 +247,7 @@ function Base.Array{T}(G::GradgenOperator) where {T}
     𝟘 = zeros(T, N, M)
     μ = G.control_deriv_ops
     block_rows = [
-        hcat([𝟘 for j = 1:i-1]..., Array{T}(G.G), [𝟘 for j = i+1:L]..., Array{T}(μ[i]))
-        for i = 1:L
+        hcat([𝟘 for j = 1:(i-1)]..., Array{T}(G.G), [𝟘 for j = (i+1):L]..., Array{T}(μ[i])) for i = 1:L
     ]
     last_block_row = hcat([𝟘 for j = 1:L]..., Array{T}(G.G))
     return Base.Array{T}(vcat(block_rows..., last_block_row))

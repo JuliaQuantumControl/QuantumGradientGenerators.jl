@@ -10,9 +10,9 @@ using QuantumPropagators.Controls: evaluate
 
     N = 10  # size of Hilbert space
     ρ = 1.0  # spectral radius
-    Ĥ₀ = random_matrix(N; hermitian=true, spectral_radius=ρ)
-    Ĥ₁ = random_matrix(N; hermitian=true, spectral_radius=ρ)
-    Ĥ₂ = random_matrix(N; hermitian=true, spectral_radius=ρ)
+    Ĥ₀ = random_matrix(N; hermitian = true, spectral_radius = ρ)
+    Ĥ₁ = random_matrix(N; hermitian = true, spectral_radius = ρ)
+    Ĥ₂ = random_matrix(N; hermitian = true, spectral_radius = ρ)
     Zero = zeros(ComplexF64, N, N)
     ϵ₁ = t -> 1.0
     ϵ₂ = t -> 1.0
@@ -43,14 +43,14 @@ using QuantumPropagators.Controls: evaluate
     @test abs(H_E_min - G_E_min) < 1e-12
     @test abs(H_E_max - G_E_max) < 1e-12
 
-    G_range_diag = collect(specrange(G̃, method=:diag))
+    G_range_diag = collect(specrange(G̃, method = :diag))
     @test eltype(G_range_diag) ≡ Float64
     @test norm(G_range_diag - [G_E_min, G_E_max]) < 1e-12
 
-    H_range_diag = collect(specrange(Ĥ, method=:diag))
+    H_range_diag = collect(specrange(Ĥ, method = :diag))
     @test norm(H_range_diag - G_range_diag) < 1e-12
 
-    G_range_arnoldi = collect(specrange(G̃, method=:arnoldi, m_max=100))
+    G_range_arnoldi = collect(specrange(G̃, method = :arnoldi, m_max = 100))
     @test eltype(G_range_arnoldi) ≡ Float64
     @test norm(G_range_arnoldi - [H_E_min, H_E_max]) < 1e-2
     # `specrange(Ĥ, method=:arnoldi)` isn't very exact, so we don't
@@ -63,9 +63,9 @@ end
     N = 100  # size of Hilbert space
     ρ = 1.0  # spectral radius
     density = 0.1
-    Ĥ₀ = random_matrix(N; hermitian=true, spectral_radius=ρ, density)
-    Ĥ₁ = random_matrix(N; hermitian=true, spectral_radius=ρ, density)
-    Ĥ₂ = random_matrix(N; hermitian=true, spectral_radius=ρ, density)
+    Ĥ₀ = random_matrix(N; hermitian = true, spectral_radius = ρ, density)
+    Ĥ₁ = random_matrix(N; hermitian = true, spectral_radius = ρ, density)
+    Ĥ₂ = random_matrix(N; hermitian = true, spectral_radius = ρ, density)
     Zero = zeros(ComplexF64, N, N)
     ϵ₁ = t -> 1.0
     ϵ₂ = t -> 1.0
@@ -97,11 +97,11 @@ end
     @test abs(H_E_min - G_E_min) < 1e-12
     @test abs(H_E_max - G_E_max) < 1e-12
 
-    G_range_diag = collect(specrange(G̃, method=:diag))
+    G_range_diag = collect(specrange(G̃, method = :diag))
     @test eltype(G_range_diag) ≡ Float64
     @test norm(G_range_diag - [G_E_min, G_E_max]) < 1e-12
 
-    G_range_arnoldi = collect(specrange(G̃, method=:arnoldi, m_max=100))
+    G_range_arnoldi = collect(specrange(G̃, method = :arnoldi, m_max = 100))
     @test eltype(G_range_arnoldi) ≡ Float64
     @test norm(G_range_arnoldi - [G_E_min, G_E_max]) < 0.2
 

@@ -30,7 +30,7 @@ function get_controls(O1::GradgenOperator)
 end
 
 
-function random_state(H::GradgenOperator; rng=GLOBAL_RNG, _...)
+function random_state(H::GradgenOperator; rng = GLOBAL_RNG, _...)
     state = random_state(H.G; rng)
     num_controls = length(H.control_deriv_ops)
     grad_states = [random_state(H.G; rng) for i ∈ eachindex(H.control_deriv_ops)]

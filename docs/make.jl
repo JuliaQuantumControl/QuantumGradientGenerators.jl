@@ -21,17 +21,22 @@ links = InterLinks(
     "QuantumControl" => "https://juliaquantumcontrol.github.io/QuantumControl.jl/$DEV_OR_STABLE",
 )
 
+fallbacks = ExternalFallbacks(
+    "QuantumPropagators.Interfaces.supports_inplace" => "@extref QuantumPropagators :jl:function:`QuantumPropagators.Interfaces.supports_inplace`",
+    automatic = false,
+)
+
 println("Starting makedocs")
 
 makedocs(;
-    plugins=[links],
-    authors=AUTHORS,
-    sitename="QuantumGradientGenerators.jl",
-    doctest=false,
-    format=Documenter.HTML(;
-        prettyurls=true,
-        canonical="https://juliaquantumcontrol.github.io/QuantumGradientGenerators.jl",
-        assets=[
+    plugins = [links, fallbacks],
+    authors = AUTHORS,
+    sitename = "QuantumGradientGenerators.jl",
+    doctest = false,
+    format = Documenter.HTML(;
+        prettyurls = true,
+        canonical = "https://juliaquantumcontrol.github.io/QuantumGradientGenerators.jl",
+        assets = [
             asset(
                 "https://juliaquantumcontrol.github.io/QuantumControl.jl/dev/assets/topbar/topbar.css"
             ),
@@ -39,11 +44,11 @@ makedocs(;
                 "https://juliaquantumcontrol.github.io/QuantumControl.jl/dev/assets/topbar/topbar.js"
             ),
         ],
-        footer="[$NAME.jl]($GITHUB) v$VERSION docs powered by [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl)."
+        footer = "[$NAME.jl]($GITHUB) v$VERSION docs powered by [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl)."
     ),
-    pages=["Home" => "index.md", "API" => "api.md",]
+    pages = ["Home" => "index.md", "API" => "api.md",]
 )
 
 println("Finished makedocs")
 
-deploydocs(; repo="github.com/JuliaQuantumControl/QuantumGradientGenerators.jl",)
+deploydocs(; repo = "github.com/JuliaQuantumControl/QuantumGradientGenerators.jl",)

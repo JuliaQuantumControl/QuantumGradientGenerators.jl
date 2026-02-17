@@ -6,7 +6,12 @@ function evaluate(O::GradgenOperator, args...; kwargs...)
 end
 
 
-function evaluate!(G::GradgenOperator, gradgen::GradGenerator, args...; vals_dict=IdDict())
+function evaluate!(
+    G::GradgenOperator,
+    gradgen::GradGenerator,
+    args...;
+    vals_dict = IdDict()
+)
     evaluate!(G.G, gradgen.G, args...; vals_dict)
     for (i, control) in enumerate(gradgen.controls)
         μ = gradgen.control_derivs[i]
@@ -18,7 +23,7 @@ function evaluate!(G::GradgenOperator, gradgen::GradGenerator, args...; vals_dic
 end
 
 
-function evaluate(gradgen::GradGenerator, args...; vals_dict=IdDict())
+function evaluate(gradgen::GradGenerator, args...; vals_dict = IdDict())
     G = evaluate(gradgen.G, args...; vals_dict)
     control_deriv_ops = [evaluate(μ, args...; vals_dict) for μ ∈ gradgen.control_derivs]
     num_controls = length(control_deriv_ops)
