@@ -89,12 +89,12 @@ using QuantumPropagators.Controls: evaluate
 
     Ψ̃_out_full = exp(-𝕚 * G̃_full * dt) * Ψ̃_full
     # propagation correct?
-    @test norm(Ψ̃_out_full[2N+1:3N] - Û_Ψ) < 1e-10
+    @test norm(Ψ̃_out_full[(2N+1):3N] - Û_Ψ) < 1e-10
 
     # do we get the same results as from newton?
-    @test norm(Ψ̃_out_full[2N+1:3N] - Ψ̃_out.state) < 1e-10
+    @test norm(Ψ̃_out_full[(2N+1):3N] - Ψ̃_out.state) < 1e-10
     @test norm(Ψ̃_out_full[1:N] - Ψ̃_out.grad_states[1]) < 1e-10
-    @test norm(Ψ̃_out_full[N+1:2N] - Ψ̃_out.grad_states[2]) < 1e-10
+    @test norm(Ψ̃_out_full[(N+1):2N] - Ψ̃_out.grad_states[2]) < 1e-10
 
     ###########################################################################
     # Test custom expprop
@@ -111,12 +111,12 @@ using QuantumPropagators.Controls: evaluate
 
     Ψ̃_out_full = exp(-𝕚 * G̃_full * dt) * Ψ̃_full
     # propagation correct?
-    @test norm(Ψ̃_out_full[2N+1:3N] - Û_Ψ) < 1e-10
+    @test norm(Ψ̃_out_full[(2N+1):3N] - Û_Ψ) < 1e-10
 
     # do we get the same results as from newton?
-    @test norm(Ψ̃_out_full[2N+1:3N] - Ψ̃_out.state) < 1e-10
+    @test norm(Ψ̃_out_full[(2N+1):3N] - Ψ̃_out.state) < 1e-10
     @test norm(Ψ̃_out_full[1:N] - Ψ̃_out.grad_states[1]) < 1e-10
-    @test norm(Ψ̃_out_full[N+1:2N] - Ψ̃_out.grad_states[2]) < 1e-10
+    @test norm(Ψ̃_out_full[(N+1):2N] - Ψ̃_out.grad_states[2]) < 1e-10
 
     ###########################################################################
     # Test standard expprop
@@ -125,10 +125,10 @@ using QuantumPropagators.Controls: evaluate
         Ψ̃,
         G̃,
         [0, dt];
-        method=:expprop,
-        inplace=true,
-        convert_state=Vector{ComplexF64},
-        convert_operator=Matrix{ComplexF64}
+        method = :expprop,
+        inplace = true,
+        convert_state = Vector{ComplexF64},
+        convert_operator = Matrix{ComplexF64}
     )
     Ψ̃_out_exp = prop_step!(propagator)
     @test norm(Ψ̃_out_exp - Ψ̃_out) < 1e-11
@@ -162,14 +162,14 @@ using QuantumPropagators.Controls: evaluate
     Ψ̃_out_full2 = exp(-𝕚 * G̃_full2 * dt) * Ψ̃_full2
 
     # propagation correct?
-    @test norm(Ψ̃_out_full1[N+1:2N] - Û_Ψ) < 1e-12
-    @test norm(Ψ̃_out_full2[N+1:2N] - Û_Ψ) < 1e-12
+    @test norm(Ψ̃_out_full1[(N+1):2N] - Û_Ψ) < 1e-12
+    @test norm(Ψ̃_out_full2[(N+1):2N] - Û_Ψ) < 1e-12
 
     # do we get the same results as with the combined grad-gen?
     @test norm(Ψ̃_out_full1[1:N] - Ψ̃_out_full[1:N]) < 1e-12
-    @test norm(Ψ̃_out_full2[1:N] - Ψ̃_out_full[N+1:2N]) < 1e-12
-    @test norm(Ψ̃_out_full1[N+1:2N] - Ψ̃_out_full[2N+1:3N]) < 1e-12
-    @test norm(Ψ̃_out_full2[N+1:2N] - Ψ̃_out_full[2N+1:3N]) < 1e-12
+    @test norm(Ψ̃_out_full2[1:N] - Ψ̃_out_full[(N+1):2N]) < 1e-12
+    @test norm(Ψ̃_out_full1[(N+1):2N] - Ψ̃_out_full[(2N+1):3N]) < 1e-12
+    @test norm(Ψ̃_out_full2[(N+1):2N] - Ψ̃_out_full[(2N+1):3N]) < 1e-12
 
     ###########################################################################
     # Compare against Zygote
