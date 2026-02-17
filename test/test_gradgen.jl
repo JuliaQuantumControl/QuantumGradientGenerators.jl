@@ -81,6 +81,9 @@ using QuantumPropagators.Controls: evaluate
         Ψ̃.state
     ]
 
+    @test size(G̃) == size(G̃_full)
+    @test eltype(G̃) == eltype(G̃_full)
+
     # proper initialization? grad_states should be zero
     @test norm(Ψ̃_full) == norm(Ψ̃.state) == norm(Ψ)
 

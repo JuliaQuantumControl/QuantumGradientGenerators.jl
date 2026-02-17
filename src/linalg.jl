@@ -75,8 +75,16 @@ function Base.length(Ψ::GradVector)
 end
 
 
-function Base.size(G::GradgenOperator)
-    return Base.size(G.G)
+function Base.size(O::GradgenOperator{num_controls,GT,CGT}) where {num_controls,GT,CGT}
+    return (num_controls + 1) .* size(O.G)
+end
+
+
+function Base.size(
+    O::GradgenOperator{num_controls,GT,CGT},
+    dim::Integer
+) where {num_controls,GT,CGT}
+    return (num_controls + 1) * size(O.G, dim)
 end
 
 
@@ -88,6 +96,9 @@ function Base.similar(G::GradgenOperator{num_controls,GT,CGT}) where {num_contro
     return GradgenOperator{num_controls,GT,CGT}(similar(G.G), similar(G.control_deriv_ops))
 end
 
+function Base.eltype(O::GradgenOperator{num_controls,GT,CGT}) where {num_controls,GT,CGT}
+    return promote_type(eltype(GT), eltype(CGT))
+end
 
 function Base.copyto!(dest::GradgenOperator, src::GradgenOperator)
     copyto!(dest.G, src.G)
@@ -161,7 +172,7 @@ function *(
 end
 
 
-@inline function convert_gradgen_to_dense(G)
+@inline function convert_gradgen_to_dense(G::GradGenerator)
     N = size(G.G)[1]
     L = length(G.control_derivs)
     G_full = zeros(eltype(G.G), N * (L + 1), N * (L + 1))
@@ -169,7 +180,7 @@ end
 end
 
 
-@inline function convert_gradgen_to_dense!(G_full, G)
+@inline function convert_gradgen_to_dense!(G_full, G::GradGenerator)
     N = size(G.G)[1]
     L = length(G.control_derivs)
     @inbounds for i = 1:L+1
