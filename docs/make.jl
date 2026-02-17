@@ -21,10 +21,15 @@ links = InterLinks(
     "QuantumControl" => "https://juliaquantumcontrol.github.io/QuantumControl.jl/$DEV_OR_STABLE",
 )
 
+fallbacks = ExternalFallbacks(
+    "QuantumPropagators.Interfaces.supports_inplace" => "@extref QuantumPropagators :jl:function:`QuantumPropagators.Interfaces.supports_inplace`",
+    automatic = false,
+)
+
 println("Starting makedocs")
 
 makedocs(;
-    plugins = [links],
+    plugins = [links, fallbacks],
     authors = AUTHORS,
     sitename = "QuantumGradientGenerators.jl",
     doctest = false,
