@@ -1,5 +1,6 @@
 import QuantumControl.QuantumPropagators: _exp_prop_convert_state
-import QuantumControl.QuantumPropagators.Interfaces: supports_inplace
+import QuantumControl.QuantumPropagators.Interfaces:
+    supports_inplace, supports_vector_interface
 
 
 @doc raw"""Extended state-vector for the dynamic gradient.
@@ -68,8 +69,8 @@ in-place operations.
 
 Returns `Ψ̃`.
 """
-function resetgradvec!(Ψ̃::GradVector)
-    if supports_inplace(Ψ̃)
+function resetgradvec!(Ψ̃::T) where {T<:GradVector}
+    if supports_inplace(T)
         for i in eachindex(Ψ̃.grad_states)
             fill!(Ψ̃.grad_states[i], 0.0)
         end
@@ -89,4 +90,7 @@ end
 
 _exp_prop_convert_state(::GradVector) = Vector{ComplexF64}
 
-supports_inplace(Ψ̃::GradVector) = supports_inplace(Ψ̃.state)
+supports_inplace(::Type{GradVector{N,T}}) where {N,T} = supports_inplace(T)
+
+supports_vector_interface(::Type{GradVector{N,T}}) where {N,T} =
+    supports_vector_interface(T)

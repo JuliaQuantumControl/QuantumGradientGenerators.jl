@@ -12,6 +12,11 @@ function LinearAlgebra.mul!(Φ::GradVector, G::GradgenOperator, Ψ::GradVector, 
 end
 
 
+function LinearAlgebra.mul!(Φ::GradVector, G::GradgenOperator, Ψ::GradVector)
+    return LinearAlgebra.mul!(Φ, G, Ψ, true, false)
+end
+
+
 function LinearAlgebra.lmul!(c, Ψ::GradVector)
     LinearAlgebra.lmul!(c, Ψ.state)
     for i ∈ eachindex(Ψ.grad_states)
@@ -48,6 +53,11 @@ function LinearAlgebra.dot(Ψ::GradVector, Φ::GradVector)
 end
 
 
+function LinearAlgebra.dot(Ψ::GradVector, G::GradgenOperator, Φ::GradVector)
+    return LinearAlgebra.dot(Ψ, G * Φ)
+end
+
+
 LinearAlgebra.ishermitian(G::GradgenOperator) = false
 
 
@@ -75,6 +85,11 @@ function Base.length(Ψ::GradVector)
 end
 
 
+function Base.size(Ψ::GradVector{num_controls,T}) where {num_controls,T}
+    return ((num_controls + 1) * length(Ψ.state),)
+end
+
+
 function Base.size(O::GradgenOperator{num_controls,GT,CGT}) where {num_controls,GT,CGT}
     return (num_controls + 1) .* size(O.G)
 end
@@ -89,15 +104,103 @@ end
 
 
 function Base.similar(Ψ::GradVector{num_controls,T}) where {num_controls,T}
-    return GradVector{num_controls,T}(similar(Ψ.state), [similar(ϕ) for ϕ ∈ Ψ.grad_states])
+    state_sim = similar(Ψ.state)
+    grad_states_sim = [similar(ϕ) for ϕ ∈ Ψ.grad_states]
+    return GradVector{num_controls,typeof(state_sim)}(state_sim, grad_states_sim)
 end
 
-function Base.similar(G::GradgenOperator{num_controls,GT,CGT}) where {num_controls,GT,CGT}
-    return GradgenOperator{num_controls,GT,CGT}(similar(G.G), similar(G.control_deriv_ops))
+Base.similar(Ψ::GradVector, ::Type{S}) where {S} = Vector{S}(undef, length(Ψ))
+
+Base.similar(Ψ::GradVector, dims::Tuple{Vararg{Int}}) = Array{eltype(Ψ)}(undef, dims)
+
+# These definitions of `similar` exist to make ExponentialUtilities happy, but
+# it's not clear at all that `similar` with a custom shape really makes sense
+Base.similar(::GradVector, ::Type{T}, dims::Tuple{Int,Int}) where {T} =
+    Matrix{T}(undef, dims...)
+
+Base.similar(::GradVector, ::Type{T}, dims::Tuple{Int}) where {T} =
+    Vector{T}(undef, dims[1])
+
+function Base.getindex(Ψ::GradVector{num_controls,T}, k::Int) where {num_controls,T}
+    N = length(Ψ.state)
+    L = num_controls
+    block = (k - 1) ÷ N + 1
+    local_k = (k - 1) % N + 1
+    if block <= L
+        return Ψ.grad_states[block][local_k]
+    else
+        return Ψ.state[local_k]
+    end
 end
 
-function Base.eltype(O::GradgenOperator{num_controls,GT,CGT}) where {num_controls,GT,CGT}
+function Base.setindex!(Ψ::GradVector{num_controls,T}, v, k::Int) where {num_controls,T}
+    N = length(Ψ.state)
+    L = num_controls
+    block = (k - 1) ÷ N + 1
+    local_k = (k - 1) % N + 1
+    if block <= L
+        Ψ.grad_states[block][local_k] = v
+    else
+        Ψ.state[local_k] = v
+    end
+    return Ψ
+end
+
+function Base.iterate(Ψ::GradVector, k = 1)
+    k > length(Ψ) && return nothing
+    return (Ψ[k], k + 1)
+end
+
+# As for an `Operator`, we implement `similar` to return a standard `Array`
+# because `GradgenOperator` does not `setindex!`, so it's arguable not a
+# "mutable array"even if its components are mutable.
+Base.similar(G::GradgenOperator) = Array{eltype(G)}(undef, size(G))
+
+Base.similar(O::GradgenOperator, ::Type{S}) where {S} = Array{S}(undef, size(O))
+Base.similar(O::GradgenOperator, dims::Tuple{Vararg{Int}}) = Array{eltype(O)}(undef, dims)
+Base.similar(O::GradgenOperator, ::Type{S}, dims::Tuple{Vararg{Int}}) where {S} =
+    Array{S}(undef, dims)
+
+function Base.eltype(
+    ::Type{GradgenOperator{num_controls,GT,CGT}}
+) where {num_controls,GT,CGT}
     return promote_type(eltype(GT), eltype(CGT))
+end
+
+function Base.getindex(
+    O::GradgenOperator{num_controls,GT,CGT},
+    row::Int,
+    col::Int
+) where {num_controls,GT,CGT}
+    T = eltype(O)
+    N, M = size(O.G)
+    L = num_controls
+    block_row = (row - 1) ÷ N + 1
+    block_col = (col - 1) ÷ M + 1
+    local_row = (row - 1) % N + 1
+    local_col = (col - 1) % M + 1
+    if block_row == block_col
+        return convert(T, O.G[local_row, local_col])
+    elseif block_col == L + 1 && block_row <= L
+        return convert(T, O.control_deriv_ops[block_row][local_row, local_col])
+    else
+        return zero(T)
+    end
+end
+
+Base.length(O::GradgenOperator) = prod(size(O))
+
+function Base.iterate(O::GradgenOperator, k = 1)
+    n = length(O)
+    k > n && return nothing
+    n_rows = size(O, 1)
+    i = (k - 1) % n_rows + 1
+    j = (k - 1) ÷ n_rows + 1
+    return (O[i, j], k + 1)
+end
+
+function Base.eltype(::Type{GradVector{num_controls,T}}) where {num_controls,T}
+    return eltype(T)
 end
 
 function Base.copyto!(dest::GradgenOperator, src::GradgenOperator)

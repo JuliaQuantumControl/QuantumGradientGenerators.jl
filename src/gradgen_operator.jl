@@ -2,7 +2,8 @@ using Random: GLOBAL_RNG
 import QuantumControl.QuantumPropagators: _exp_prop_convert_operator
 import QuantumControl.QuantumPropagators.Controls: get_controls
 import QuantumControl.QuantumPropagators.SpectralRange: random_state
-import QuantumControl.QuantumPropagators.Interfaces: supports_inplace
+import QuantumControl.QuantumPropagators.Interfaces:
+    supports_inplace, supports_matrix_interface
 
 
 """Static generator for the dynamic gradient.
@@ -40,4 +41,8 @@ end
 
 _exp_prop_convert_operator(::GradgenOperator) = Matrix{ComplexF64}
 
-supports_inplace(::GradgenOperator) = true
+supports_inplace(::Type{GradgenOperator{N,GT,CGT}}) where {N,GT,CGT} =
+    (supports_inplace(GT) && supports_inplace(CGT))
+
+supports_matrix_interface(::Type{<:GradgenOperator{N,GT,CGT}}) where {N,GT,CGT} =
+    supports_matrix_interface(GT) && supports_matrix_interface(CGT)
