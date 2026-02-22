@@ -103,7 +103,7 @@ end
     # iterate visits elements in column-major order, consistent with vec(Array(op))
     @test all(collect(op) .≈ vec(dense))
 
-    # 3-arg mul! agrees with 5-arg mul!(Phi, G, Psi, 1, 0)
+    # 3-arg mul! agrees with 5-arg mul!(Phi, G, Psi, true, false)
     Psi = GradVector(rand(ComplexF64, N), L)
     Phi1 = GradVector(zeros(ComplexF64, N), L)
     Phi2 = GradVector(zeros(ComplexF64, N), L)
@@ -210,5 +210,38 @@ end
 
     # check_state still passes via the basic (non-vector) state interface
     @test check_state(gradvec)
+
+    # Vector interface methods must throw an error when not supported
+    @test_throws "does not support the vector interface" gradvec[1]
+    @test_throws "does not support the vector interface" (gradvec[1] = 0.0)
+    @test_throws "does not support the vector interface" size(gradvec)
+    @test_throws "does not support the vector interface" length(gradvec)
+    @test_throws "does not support the vector interface" iterate(gradvec)
+
+end
+
+
+
+# A wrapper type with no supports_matrix_interface declaration (defaults to false)
+struct NonMatrixOp
+    data::Matrix{ComplexF64}
+end
+
+@testset "GradgenOperator without Matrix Interface" begin
+
+    N = 5
+    L = 2
+    G = NonMatrixOp(rand(ComplexF64, N, N))
+    mu = [NonMatrixOp(rand(ComplexF64, N, N)) for _ = 1:L]
+    op = GradgenOperator{L,NonMatrixOp,NonMatrixOp}(G, mu)
+
+    @test !supports_matrix_interface(typeof(op))
+
+    # Matrix interface methods must throw an error when not supported
+    @test_throws "does not support the matrix interface" op[1, 1]
+    @test_throws "does not support the matrix interface" size(op)
+    @test_throws "does not support the matrix interface" size(op, 1)
+    @test_throws "does not support the matrix interface" length(op)
+    @test_throws "does not support the matrix interface" iterate(op)
 
 end
