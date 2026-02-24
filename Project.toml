@@ -9,7 +9,14 @@ QuantumControl = "8a270532-f23f-47a8-83a9-b33d10cad486"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
+[weakdeps]
+ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
+
+[extensions]
+QuantumGradientGeneratorsArrayInterfaceExt = "ArrayInterface"
+
 [compat]
+ArrayInterface = "7.0"
 LinearAlgebra = "1"
 QuantumControl = ">=0.11.0"
 Random = "1"
