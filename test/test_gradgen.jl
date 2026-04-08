@@ -32,6 +32,9 @@ using QuantumPropagators.Controls: evaluate
     G̃ = evaluate(G̃_of_t; vals_dict)
     Ĥ = evaluate(Ĥ_of_t; vals_dict)
 
+    G̃2 = GradgenOperator(G̃.G, G̃.control_deriv_ops)
+    @test G̃2 == G̃
+
     Û_Ψ = exp(-𝕚 * Ĥ * dt) * Ψ
 
     num_controls = length(Ĥ_of_t) - 1

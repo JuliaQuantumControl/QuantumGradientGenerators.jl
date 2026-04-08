@@ -12,6 +12,8 @@ import QuantumControl.QuantumPropagators.Interfaces:
 using QuantumPropagators.Controls: evaluate
 
 G::GradgenOperator = evaluate(gradgen::GradGenerator; vals_dict)
+
+G = GradgenOperator(G.G, G.control_deriv_ops)
 ```
 
 is the result of plugging in specific values for all controls in a
@@ -26,6 +28,14 @@ struct GradgenOperator{num_controls,GT,CGT}
 end
 
 
+function GradgenOperator(G, control_deriv_ops)
+    num_controls = length(control_deriv_ops)
+    GT = typeof(G)
+    CGT = eltype(control_deriv_ops)
+    return GradgenOperator{num_controls,GT,CGT}(G, control_deriv_ops)
+end
+
+
 function get_controls(O1::GradgenOperator)
     return Tuple([])
 end
@@ -34,7 +44,7 @@ end
 function random_state(H::GradgenOperator; rng = GLOBAL_RNG, _...)
     state = random_state(H.G; rng)
     num_controls = length(H.control_deriv_ops)
-    grad_states = [random_state(H.G; rng) for i ∈ eachindex(H.control_deriv_ops)]
+    grad_states = [random_state(H.G; rng) for _ in eachindex(H.control_deriv_ops)]
     return GradVector{num_controls,typeof(state)}(state, grad_states)
 end
 
