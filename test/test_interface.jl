@@ -6,7 +6,7 @@ using QuantumControl.Interfaces: check_generator
 using QuantumPropagators.Interfaces:
     check_state, check_operator, supports_matrix_interface, supports_vector_interface
 using QuantumGradientGenerators: GradGenerator, GradVector, GradgenOperator
-using StaticArrays: SVector, SMatrix
+using StaticArrays: SVector, SMatrix, MVector
 using LinearAlgebra: norm, dot, mul!, I
 
 
@@ -30,6 +30,18 @@ end
     @test check_state(Ψ̃)
 
     @test norm(2.2 * Ψ̃ - Ψ̃ * 2.2) < 1e-14
+
+    Ψ̃2 = similar(Ψ̃)
+    @test Ψ̃2 isa GradVector{2,<:MVector}
+
+    # We've had propagators use code like
+    #
+    #   v0::ST = similar(Ψ::ST)
+    #
+    # which relies on being able to convert mutable types back to their
+    # immutable version
+    Ψ̃3 = convert(typeof(Ψ̃), Ψ̃2)
+    @test typeof(Ψ̃3) == typeof(Ψ̃)
 
 end
 
