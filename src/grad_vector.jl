@@ -90,6 +90,19 @@ end
 
 _exp_prop_convert_state(::GradVector) = Vector{ComplexF64}
 
+
+function Base.convert(
+    ::Type{GradVector{num_controls,T2}},
+    Ψ̃::GradVector{num_controls,T1}
+) where {T1,T2,num_controls}
+    # Used, e.g., for Cheby initialization
+    return GradVector{num_controls,T2}(
+        convert(T2, Ψ̃.state),
+        T2[convert(T2, Ψ′) for Ψ′ in Ψ̃.grad_states]
+    )
+end
+
+
 supports_inplace(::Type{GradVector{N,T}}) where {N,T} = supports_inplace(T)
 
 supports_vector_interface(::Type{GradVector{N,T}}) where {N,T} =
