@@ -8,12 +8,14 @@ using QuantumPropagators.Interfaces:
 using QuantumGradientGenerators: GradGenerator, GradVector, GradgenOperator
 using StaticArrays: SVector, SMatrix, MVector
 using LinearAlgebra: norm, dot, mul!, I
+using StableRNGs: StableRNG
 
 
 @testset "GradVector Interface" begin
 
+    rng = StableRNG(1179926107)
     N = 10
-    Ψ = random_state_vector(N)
+    Ψ = random_state_vector(N; rng)
     Ψ̃ = GradVector(Ψ, 2)
     @test check_state(Ψ̃)
 
@@ -24,8 +26,9 @@ end
 
 @testset "GradVector Interface (Static)" begin
 
+    rng = StableRNG(2188051723)
     N = 10
-    Ψ = SVector{N,ComplexF64}(random_state_vector(N))
+    Ψ = SVector{N,ComplexF64}(random_state_vector(N; rng))
     Ψ̃ = GradVector(Ψ, 2)
     @test check_state(Ψ̃)
 
@@ -48,10 +51,11 @@ end
 
 @testset "GradGenerator Interface" begin
 
+    rng = StableRNG(3031820470)
     N = 10
-    Ĥ₀ = random_matrix(N, hermitian = true)
-    Ĥ₁ = random_matrix(N, hermitian = true)
-    Ĥ₂ = random_matrix(N, hermitian = true)
+    Ĥ₀ = random_matrix(N; hermitian = true, rng)
+    Ĥ₁ = random_matrix(N; hermitian = true, rng)
+    Ĥ₂ = random_matrix(N; hermitian = true, rng)
     ϵ₁(t) = 1.0
     ϵ₂(t) = 1.0
     Ĥ_of_t = hamiltonian(Ĥ₀, (Ĥ₁, ϵ₁), (Ĥ₂, ϵ₂))
@@ -60,7 +64,7 @@ end
 
     G̃_of_t = GradGenerator(Ĥ_of_t)
 
-    Ψ = random_state_vector(N)
+    Ψ = random_state_vector(N; rng)
     Ψ̃ = GradVector(Ψ, length(get_controls(G̃_of_t)))
 
     @test check_generator(G̃_of_t; state = Ψ̃, tlist, for_gradient_optimization = false)
@@ -70,10 +74,11 @@ end
 
 @testset "GradGenerator Interface (Static)" begin
 
+    rng = StableRNG(1911203795)
     N = 10
-    Ĥ₀ = SMatrix{N,N,ComplexF64}(random_matrix(N, hermitian = true))
-    Ĥ₁ = SMatrix{N,N,ComplexF64}(random_matrix(N, hermitian = true))
-    Ĥ₂ = SMatrix{N,N,ComplexF64}(random_matrix(N, hermitian = true))
+    Ĥ₀ = SMatrix{N,N,ComplexF64}(random_matrix(N; hermitian = true, rng))
+    Ĥ₁ = SMatrix{N,N,ComplexF64}(random_matrix(N; hermitian = true, rng))
+    Ĥ₂ = SMatrix{N,N,ComplexF64}(random_matrix(N; hermitian = true, rng))
     ϵ₁(t) = 1.0
     ϵ₂(t) = 1.0
     Ĥ_of_t = hamiltonian(Ĥ₀, (Ĥ₁, ϵ₁), (Ĥ₂, ϵ₂))
@@ -82,7 +87,7 @@ end
 
     G̃_of_t = GradGenerator(Ĥ_of_t)
 
-    Ψ = SVector{N,ComplexF64}(random_state_vector(N))
+    Ψ = SVector{N,ComplexF64}(random_state_vector(N; rng))
     Ψ̃ = GradVector(Ψ, length(get_controls(G̃_of_t)))
 
     @test check_generator(G̃_of_t; state = Ψ̃, tlist, for_gradient_optimization = false)
@@ -92,12 +97,13 @@ end
 
 @testset "GradgenOperator Matrix Interface" begin
 
+    rng = StableRNG(3317751223)
     N = 5
     L = 2
     G = Matrix{ComplexF64}(I, N, N)
-    mu = [rand(ComplexF64, N, N) for _ = 1:L]
+    mu = [rand(rng, ComplexF64, N, N) for _ = 1:L]
     op = GradgenOperator{L,Matrix{ComplexF64},Matrix{ComplexF64}}(G, mu)
-    state = GradVector(rand(ComplexF64, N), L)
+    state = GradVector(rand(rng, ComplexF64, N), L)
 
     # supports_matrix_interface reports true for matrix-backed GradgenOperator
     @test supports_matrix_interface(typeof(op))
@@ -116,7 +122,7 @@ end
     @test all(collect(op) .≈ vec(dense))
 
     # 3-arg mul! agrees with 5-arg mul!(Phi, G, Psi, true, false)
-    Psi = GradVector(rand(ComplexF64, N), L)
+    Psi = GradVector(rand(rng, ComplexF64, N), L)
     Phi1 = GradVector(zeros(ComplexF64, N), L)
     Phi2 = GradVector(zeros(ComplexF64, N), L)
     mul!(Phi1, op, Psi)
@@ -124,7 +130,7 @@ end
     @test norm(Phi1 - Phi2) < 1e-14
 
     # 3-arg dot(Psi, op, Phi) matches dot(Psi, op * Phi)
-    Psi2 = GradVector(rand(ComplexF64, N), L)
+    Psi2 = GradVector(rand(rng, ComplexF64, N), L)
     @test dot(state, op, Psi2) ≈ dot(state, op * Psi2)
 
     # similar(op) returns a dense Array of the same eltype and size (matching Operator pattern)
@@ -147,11 +153,52 @@ end
 end
 
 
-@testset "GradVector Vector Interface" begin
+@testset "GradgenOperator flat-vector mul!" begin
 
+    rng = StableRNG(1602052280)
     N = 5
     L = 2
-    Psi = rand(ComplexF64, N)
+    G = rand(rng, ComplexF64, N, N)
+    mu = [rand(rng, ComplexF64, N, N) for _ = 1:L]
+    op = GradgenOperator{L,Matrix{ComplexF64},Matrix{ComplexF64}}(G, mu)
+    dense = Array(op)
+
+    # Flat-vector layout: [grad_1 | grad_2 | ... | grad_L | state]
+    Ψ_flat = rand(rng, ComplexF64, N * (L + 1))
+    Φ_ref = dense * Ψ_flat
+
+    # 3-arg mul! agrees with the dense matrix-vector product
+    Φ1 = zeros(ComplexF64, N * (L + 1))
+    mul!(Φ1, op, Ψ_flat)
+    @test norm(Φ1 - Φ_ref) < 1e-14
+
+    # 5-arg mul! with α=true, β=false matches the 3-arg result
+    Φ2 = zeros(ComplexF64, N * (L + 1))
+    mul!(Φ2, op, Ψ_flat, true, false)
+    @test norm(Φ2 - Φ_ref) < 1e-14
+
+    # 5-arg mul! with non-trivial α, β: Φ ← α * G * Ψ + β * Φ
+    α = 2.3 + 0.7im
+    β = 1.5 - 0.3im
+    Φ3 = rand(rng, ComplexF64, N * (L + 1))
+    Φ3_init = copy(Φ3)
+    mul!(Φ3, op, Ψ_flat, α, β)
+    @test norm(Φ3 - (α * Φ_ref + β * Φ3_init)) < 1e-14
+
+    # works with views (the actual ExponentialUtilities use case)
+    V = rand(rng, ComplexF64, N * (L + 1), 4)
+    mul!(view(V, :, 2), op, view(V, :, 1))
+    @test norm(view(V, :, 2) - dense * view(V, :, 1)) < 1e-14
+
+end
+
+
+@testset "GradVector Vector Interface" begin
+
+    rng = StableRNG(2618946253)
+    N = 5
+    L = 2
+    Psi = rand(rng, ComplexF64, N)
     gradvec = GradVector(Psi, L)
 
     # supports_vector_interface is true for Vector-backed GradVector
@@ -192,9 +239,10 @@ end
 
 @testset "GradVector Vector Interface (Static)" begin
 
+    rng = StableRNG(167987434)
     N = 5
     L = 2
-    Psi = SVector{N,ComplexF64}(rand(ComplexF64, N))
+    Psi = SVector{N,ComplexF64}(rand(rng, ComplexF64, N))
     gradvec = GradVector(Psi, L)
 
     # SVector-backed GradVector: supports_vector_interface follows the component type
@@ -212,10 +260,11 @@ end
 
 @testset "GradVector without Vector Interface" begin
 
+    rng = StableRNG(4252840018)
     N = 5
     L = 2
     # Matrix is not an AbstractVector, so supports_vector_interface returns false
-    Psi = rand(ComplexF64, N, N)
+    Psi = rand(rng, ComplexF64, N, N)
     gradvec = GradVector(Psi, L)
 
     @test !supports_vector_interface(typeof(gradvec))
@@ -241,10 +290,11 @@ end
 
 @testset "GradgenOperator without Matrix Interface" begin
 
+    rng = StableRNG(1276996367)
     N = 5
     L = 2
-    G = NonMatrixOp(rand(ComplexF64, N, N))
-    mu = [NonMatrixOp(rand(ComplexF64, N, N)) for _ = 1:L]
+    G = NonMatrixOp(rand(rng, ComplexF64, N, N))
+    mu = [NonMatrixOp(rand(rng, ComplexF64, N, N)) for _ = 1:L]
     op = GradgenOperator{L,NonMatrixOp,NonMatrixOp}(G, mu)
 
     @test !supports_matrix_interface(typeof(op))

@@ -17,6 +17,37 @@ function LinearAlgebra.mul!(Φ::GradVector, G::GradgenOperator, Ψ::GradVector)
 end
 
 
+# Flat-vector dispatch used by ExponentialUtilities' Arnoldi iteration, which
+# builds its Krylov matrix via similar(b, T, (n, m+1)) → plain Matrix{T} and
+# then calls mul!(view(V,:,j+1), A, view(V,:,j)). The GradVector is treated as
+# a packed flat vector: blocks [grad_1 | grad_2 | … | state], each of length N.
+function LinearAlgebra.mul!(
+    Φ::AbstractVector,
+    G::GradgenOperator{num_controls,GT,CGT},
+    Ψ::AbstractVector,
+    α,
+    β
+) where {num_controls,GT,CGT}
+    N = size(G.G, 1)
+    L = num_controls
+    Ψ_state = view(Ψ, (L*N+1):((L+1)*N))
+    for i = 1:L
+        Φ_grad_i = view(Φ, ((i-1)*N+1):(i*N))
+        Ψ_grad_i = view(Ψ, ((i-1)*N+1):(i*N))
+        LinearAlgebra.mul!(Φ_grad_i, G.G, Ψ_grad_i, α, β)
+        LinearAlgebra.mul!(Φ_grad_i, G.control_deriv_ops[i], Ψ_state, α, 1)
+    end
+    Φ_state = view(Φ, (L*N+1):((L+1)*N))
+    LinearAlgebra.mul!(Φ_state, G.G, Ψ_state, α, β)
+    return Φ
+end
+
+
+function LinearAlgebra.mul!(Φ::AbstractVector, G::GradgenOperator, Ψ::AbstractVector)
+    return LinearAlgebra.mul!(Φ, G, Ψ, true, false)
+end
+
+
 function LinearAlgebra.lmul!(c, Ψ::GradVector)
     LinearAlgebra.lmul!(c, Ψ.state)
     for i ∈ eachindex(Ψ.grad_states)
