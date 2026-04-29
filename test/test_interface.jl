@@ -301,8 +301,6 @@ end
 
     # Matrix interface methods must throw an error when not supported
     @test_throws "does not support the matrix interface" op[1, 1]
-    @test_throws "does not support the matrix interface" size(op)
-    @test_throws "does not support the matrix interface" size(op, 1)
     @test_throws "does not support the matrix interface" length(op)
     @test_throws "does not support the matrix interface" iterate(op)
 

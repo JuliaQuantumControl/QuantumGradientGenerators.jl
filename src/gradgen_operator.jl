@@ -51,8 +51,10 @@ end
 
 _exp_prop_convert_operator(::GradgenOperator) = Matrix{ComplexF64}
 
-supports_inplace(::Type{GradgenOperator{N,GT,CGT}}) where {N,GT,CGT} =
-    (supports_inplace(GT) && supports_inplace(CGT))
+supports_inplace(::Type{GradgenOperator{N,GT,CGT}}) where {N,GT,CGT} = supports_inplace(GT)
+# Note: `evaluate!` for `GradgenOperator` reassigns `control_deriv_ops[i]` via
+# vector element assignment, so the in-place capability of `CGT` is irrelevant.
+# Only the underlying operator `GT` needs to support in-place evaluation.
 
 supports_matrix_interface(::Type{<:GradgenOperator{N,GT,CGT}}) where {N,GT,CGT} =
     supports_matrix_interface(GT) && supports_matrix_interface(CGT)

@@ -241,52 +241,32 @@ function Base.fill!(Ψ::GradVector, v)
 end
 
 
-# === Matrix interface for GradgenOperator ===
-#
-# The following methods are part of the matrix interface and are only
-# meaningful when `supports_matrix_interface` is true for both component types.
-# Each method delegates to a private `_name(::Val{supports}, ...)` function:
-# the Val{true} method contains the implementation, and the Val{false} method
-# throws an error.
-
-function _size(
-    ::Val{true},
-    O::GradgenOperator{num_controls,GT,CGT}
-) where {num_controls,GT,CGT}
+function Base.size(O::GradgenOperator{num_controls,GT,CGT}) where {num_controls,GT,CGT}
     return (num_controls + 1) .* size(O.G)
 end
 
-function _size(::Val{false}, O::GradgenOperator)
-    error("$(typeof(O)) does not support the matrix interface")
-end
-
-function Base.size(O::T) where {T<:GradgenOperator}
-    return _size(Val(supports_matrix_interface(T)), O)
-end
-
-
-function _size(
-    ::Val{true},
+function Base.size(
     O::GradgenOperator{num_controls,GT,CGT},
     dim::Integer
 ) where {num_controls,GT,CGT}
     return (num_controls + 1) * size(O.G, dim)
 end
 
-function _size(::Val{false}, O::GradgenOperator, dim::Integer)
-    error("$(typeof(O)) does not support the matrix interface")
-end
 
-function Base.size(O::T, dim::Integer) where {T<:GradgenOperator}
-    return _size(Val(supports_matrix_interface(T)), O, dim)
-end
+# === Matrix interface for GradgenOperator ===
+#
+# The following methods are part of the matrix interface and are only
+# meaningful when `supports_matrix_interface` is true for both component types.
+# Each method delegates to a private `_name(::Val{supports}, ...)` function:
+# the Val{true} method contains the implementation, and the Val{false} method
+# throws an error. Note that this does not include `size`, which must be
+# defined for _all_ operators, whether or not they define the full matrix
+# interface.
 
 
 # As for an `Operator`, we implement `similar` to return a standard `Array`
 # because `GradgenOperator` does not `setindex!`, so it's arguably not a
 # "mutable array" even if its components are mutable.
-# similar(O) and similar(O, S) call size(O), which will error if
-# !supports_matrix_interface. The dims-based variants need no guard.
 Base.similar(G::GradgenOperator) = Array{eltype(G)}(undef, size(G))
 
 Base.similar(O::GradgenOperator, ::Type{S}) where {S} = Array{S}(undef, size(O))
