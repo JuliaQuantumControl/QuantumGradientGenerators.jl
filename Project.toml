@@ -1,7 +1,7 @@
 name = "QuantumGradientGenerators"
 uuid = "a563f35e-61db-434d-8c01-8b9e3ccdfd85"
 authors = ["Michael Goerz <mail@michaelgoerz.net>"]
-version = "0.1.8+dev"
+version = "0.1.9"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -18,7 +18,7 @@ QuantumGradientGeneratorsArrayInterfaceExt = "ArrayInterface"
 [compat]
 ArrayInterface = "7.0"
 LinearAlgebra = "1"
-QuantumControl = ">=0.11.0"
+QuantumControl = "0.11.0"
 Random = "1"
 SparseArrays = "1"
 julia = "1.9"
