@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 Michael Goerz <mail@michaelgoerz.net>
+#
+# SPDX-License-Identifier: MIT
+
 import QuantumControl.QuantumPropagators.Controls: evaluate, evaluate!
 
 

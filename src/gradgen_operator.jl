@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 Michael Goerz <mail@michaelgoerz.net>
+#
+# SPDX-License-Identifier: MIT
+
 using Random: GLOBAL_RNG
 import QuantumControl.QuantumPropagators: _exp_prop_convert_operator
 import QuantumControl.QuantumPropagators.Controls: get_controls

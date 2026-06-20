@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 Michael Goerz <mail@michaelgoerz.net>
+#
+# SPDX-License-Identifier: MIT
+
 using QuantumControl.Controls: get_control_derivs
 import QuantumControl.QuantumPropagators.Controls: get_controls
 import QuantumControl.QuantumPropagators.Controls: get_parameters

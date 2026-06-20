@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2022 Michael Goerz <mail@michaelgoerz.net>
+#
+# SPDX-License-Identifier: MIT
+
 import QuantumControl.QuantumPropagators: _exp_prop_convert_state
 import QuantumControl.QuantumPropagators.Interfaces:
     supports_inplace, supports_vector_interface
