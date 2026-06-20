@@ -3,3 +3,6 @@
 *.jl.mem
 Manifest.toml
 /docs/build/
+/gh-pages/
+/.JuliaFormatter.toml
+/lcov.info
