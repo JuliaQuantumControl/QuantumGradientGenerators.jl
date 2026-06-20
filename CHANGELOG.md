@@ -13,6 +13,8 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 
 ## [Unreleased]
 
+## [v0.1.9] — 2026-06-20
+
 * Added: `size` and `eltype` for gradient-generator operators [[#17], [#23]]
 * Added: Matrix and vector interfaces for gradient-generator operators and vectors [[#18]]
 * Added: An extension for [ArrayInterface.jl](https://github.com/JuliaArrays/ArrayInterface.jl) [[#19]]
@@ -57,7 +59,8 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 
 Initial public release
 
-[Unreleased]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/compare/v0.1.8..HEAD
+[Unreleased]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/compare/v0.1.9..HEAD
+[v0.1.9]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.1.9
 [v0.1.8]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.1.8
 [v0.1.7]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.1.7
 [v0.1.6]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.1.6
