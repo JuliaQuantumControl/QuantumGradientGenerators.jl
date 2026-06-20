@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT OR CC0-1.0
 
-.PHONY: help test docs clean distclean devrepl codestyle servedocs reuse
+.PHONY: help test docs clean distclean devrepl codestyle check-changelog changelog servedocs reuse
 .DEFAULT_GOAL := help
 
 JULIA ?= julia
@@ -64,7 +64,14 @@ clean: ## Clean up build/doc/testing artifacts
 
 codestyle: test/Manifest.toml .JuliaFormatter.toml ## Apply the codestyle to the entire project
 	$(JULIA) --project=test -e 'using JuliaFormatter; format(".", verbose=true)'
+	$(MAKE) check-changelog
 	@echo "Done. Consider using 'make devrepl'"
+
+check-changelog: ## Validate the links in CHANGELOG.md
+	$(JULIA) test/check_changelog.jl
+
+changelog: ## Validate CHANGELOG.md and add any missing issue/PR link targets
+	$(JULIA) test/check_changelog.jl --fix
 
 reuse: ## Check REUSE/SPDX licensing compliance (requires uv or pipx)
 	@if command -v reuse >/dev/null 2>&1; then \
