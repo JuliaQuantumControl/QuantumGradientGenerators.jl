@@ -223,6 +223,10 @@ end
     # iterate visits elements consistent with getindex
     @test all(collect(gradvec) .== dense)
 
+    # eachindex covers all valid indices
+    @test eachindex(gradvec) == 1:length(gradvec)
+    @test all(gradvec[k] == dense[k] for k in eachindex(gradvec))
+
     # setindex! round-trips through getindex
     gradvec2 = GradVector(copy(Psi), L)
     for k = 1:length(gradvec2)
@@ -282,6 +286,7 @@ end
     @test_throws "does not support the vector interface" size(gradvec)
     @test_throws "does not support the vector interface" length(gradvec)
     @test_throws "does not support the vector interface" iterate(gradvec)
+    @test_throws "does not support the vector interface" eachindex(gradvec)
 
 end
 

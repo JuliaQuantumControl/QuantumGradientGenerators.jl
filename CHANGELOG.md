@@ -13,6 +13,8 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 
 ## [Unreleased]
 
+* Fixed: `eachindex` is now defined for a `GradVector` that supports the vector interface. This is required for propagation with ExponentialUtilities ≥ 1.34
+
 ## [v0.1.9] — 2026-06-20
 
 * Added: `size` and `eltype` for gradient-generator operators [[#17], [#23]]

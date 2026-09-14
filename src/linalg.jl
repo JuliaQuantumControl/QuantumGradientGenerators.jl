@@ -215,6 +215,20 @@ function Base.iterate(Ψ::T, k = 1) where {T<:GradVector}
 end
 
 
+function _eachindex(::Val{true}, Ψ::GradVector)
+    return Base.OneTo(length(Ψ))
+end
+
+function _eachindex(::Val{false}, Ψ::GradVector)
+    error("$(typeof(Ψ)) does not support the vector interface")
+end
+
+# ExponentialUtilities ≥ 1.34 loops over `eachindex(b)` in `firststep!`
+function Base.eachindex(Ψ::T) where {T<:GradVector}
+    return _eachindex(Val(supports_vector_interface(T)), Ψ)
+end
+
+
 function Base.similar(Ψ::GradVector{num_controls,T}) where {num_controls,T}
     state_sim = similar(Ψ.state)
     grad_states_sim = [similar(ϕ) for ϕ ∈ Ψ.grad_states]
