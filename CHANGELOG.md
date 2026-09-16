@@ -15,6 +15,7 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 
 * Fixed: `eachindex` is now defined for a `GradVector` that supports the vector interface. This is required for propagation with ExponentialUtilities ≥ 1.34
 * Changed: The minimum supported Julia version is now 1.10 (LTS)
+* Fixed: The lower compat bound for `QuantumControl` is now 0.11.4. Earlier versions of `QuantumControl` allow `QuantumPropagators` < 0.9, which lacks `supports_matrix_interface`
 
 ## [v0.1.9] — 2026-06-20
 

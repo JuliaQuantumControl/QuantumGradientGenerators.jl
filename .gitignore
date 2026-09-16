@@ -4,9 +4,11 @@
 
 *.jl.*.cov
 *.jl.cov
+*.jl.*.mem
 *.jl.mem
+/lcov.info
 Manifest.toml
 /docs/build/
+/coverage/
 /gh-pages/
 /.JuliaFormatter.toml
-/lcov.info
