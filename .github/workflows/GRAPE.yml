@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: © 2022 Michael Goerz <mail@michaelgoerz.net>
+#
+# SPDX-License-Identifier: MIT OR CC0-1.0
+
+# Run the tests of the downstream GRAPE package (master branch) against the
+# current QuantumGradientGenerators. This is informational: a failure indicates
+# that GRAPE must be adapted, which does not necessarily block changes in
+# QuantumGradientGenerators.
+name: Test downstream GRAPE
+on:
+  push:
+    branches:
+      - master
+      - dev
+      - 'release-*'
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+permissions:
+  contents: read
+env:
+  GKSwstype: 100
+jobs:
+  test-grape:
+    name: Test GRAPE
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true
+    permissions:
+      actions: write  # for julia-actions/cache to delete the caches it created
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: QuantumGradientGenerators.jl
+      - uses: actions/checkout@v7
+        with:
+          repository: JuliaQuantumControl/GRAPE.jl
+          path: GRAPE.jl
+      - uses: julia-actions/setup-julia@v3
+        with:
+          # Requires Julia >= 1.13: `Pkg.develop` fails on earlier versions if
+          # the GRAPE test environment has a URL `[sources]` entry for
+          # QuantumGradientGenerators
+          version: '1'
+      - uses: julia-actions/cache@v3
+      - name: "Instantiate GRAPE test environment with the current QuantumGradientGenerators"
+        working-directory: GRAPE.jl
+        shell: julia --color=yes --project=test {0}
+        run: |
+          import Pkg
+          Pkg.develop(path = joinpath("..", "QuantumGradientGenerators.jl"))
+          Pkg.instantiate()
+          Pkg.status()
+      - name: "Run GRAPE tests"
+        working-directory: GRAPE.jl
+        run: julia --color=yes --project=test --depwarn=yes --check-bounds=yes -e 'include("test/runtests.jl")'
