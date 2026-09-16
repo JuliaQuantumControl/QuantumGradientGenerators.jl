@@ -11,10 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases).
 
-## [Unreleased]
+## [v0.1.10] — 2026-09-16
 
-* Fixed: `eachindex` is now defined for a `GradVector` that supports the vector interface. This is required for propagation with ExponentialUtilities ≥ 1.34
 * Changed: The minimum supported Julia version is now 1.10 (LTS)
+* Fixed: `eachindex` is now defined for a `GradVector` that supports the vector interface. This is required for propagation with ExponentialUtilities ≥ 1.34
 * Fixed: The lower compat bound for `QuantumControl` is now 0.11.4. Earlier versions of `QuantumControl` allow `QuantumPropagators` < 0.9, which lacks `supports_matrix_interface`
 
 ## [v0.1.9] — 2026-06-20
@@ -63,7 +63,8 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 
 Initial public release
 
-[Unreleased]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/compare/v0.1.9..HEAD
+[Unreleased]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/compare/v0.1.10..HEAD
+[v0.1.10]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.1.10
 [v0.1.9]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.1.9
 [v0.1.8]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.1.8
 [v0.1.7]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.1.7
