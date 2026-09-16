@@ -21,6 +21,7 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 * Fixed: `eachindex` is now defined for a `GradVector` that supports the vector interface. This is required for propagation with ExponentialUtilities ≥ 1.34
 * Fixed: The lower compat bound for `QuantumControl` is now 0.11.4. Earlier versions of `QuantumControl` allow `QuantumPropagators` < 0.9, which lacks `supports_matrix_interface`
 
+
 ## [v0.1.9] — 2026-06-20
 
 * Added: `size` and `eltype` for gradient-generator operators [[#17], [#23]]
@@ -31,37 +32,46 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 * Added: Flat matrix-vector multiplication [[#22]]
 * Added: Per-file copyright and licensing information following the [REUSE specification](https://reuse.software). Source code remains under the MIT License; documentation is additionally available under `CC-BY-4.0`, and trivial files under `CC0-1.0`.
 
+
 ## [v0.1.8] — 2024-09-04
 
 * Removed: The dependency on `QuantumControlBase`; `QuantumGradientGenerators` is now self-contained
+
 
 ## [v0.1.7] — 2024-07-27
 
 * Added: Support for the in-place interface
 
+
 ## [v0.1.6] — 2024-04-21
 
 * Added: Support for `get_parameters`
+
 
 ## [v0.1.5] — 2024-01-22
 
 * Changed: Compatibility with `QuantumControlBase` 0.9
 
+
 ## [v0.1.4] — 2024-01-08
 
 * Added: An `rng` argument to `random_state`
+
 
 ## [v0.1.3] — 2023-10-06
 
 * Changed: The minimum supported Julia version is now 1.9
 
+
 ## [v0.1.2] — 2023-05-15
 
 * Fixed: The linalg interface
 
+
 ## [v0.1.1] — 2023-02-16
 
 * Changed: `QuantumPropagators` is now an indirect dependency
+
 
 ## [v0.1.0] — 2023-01-28
 
