@@ -22,9 +22,9 @@ using QuantumPropagators.Controls: evaluate
     ϵ₂ = t -> 1.0
     Ĥ_of_t = (Ĥ₀, (Ĥ₁, ϵ₁), (Ĥ₂, ϵ₂))
     vals_dict = IdDict(ϵ₁ => 1.0, ϵ₂ => 1.0)
-    G̃_of_t = GradGenerator(Ĥ_of_t)
+    G_of_t = GradGenerator(Ĥ_of_t)
     Ĥ = evaluate(Ĥ_of_t; vals_dict)
-    G̃ = evaluate(G̃_of_t; vals_dict)
+    G = evaluate(G_of_t; vals_dict)
 
     G_expected = [
          Ĥ    Zero  Ĥ₁
@@ -32,29 +32,29 @@ using QuantumPropagators.Controls: evaluate
         Zero  Zero  Ĥ
     ]
 
-    G = Array(G̃)
+    G_full = Array(G)
 
-    @test norm(G_expected - G) < 1e-14
+    @test norm(G_expected - G_full) < 1e-14
 
-    @test maximum(imag.(eigvals(G))) < 1e-15
+    @test maximum(imag.(eigvals(G_full))) < 1e-15
     @test maximum(imag.(eigvals(Ĥ))) < 1e-15
 
     H_E_min = minimum(real.(eigvals(Ĥ)))
     H_E_max = maximum(real.(eigvals(Ĥ)))
 
-    G_E_min = minimum(real.(eigvals(G)))
-    G_E_max = maximum(real.(eigvals(G)))
+    G_E_min = minimum(real.(eigvals(G_full)))
+    G_E_max = maximum(real.(eigvals(G_full)))
     @test abs(H_E_min - G_E_min) < 1e-12
     @test abs(H_E_max - G_E_max) < 1e-12
 
-    G_range_diag = collect(specrange(G̃, method = :diag))
+    G_range_diag = collect(specrange(G, method = :diag))
     @test eltype(G_range_diag) ≡ Float64
     @test norm(G_range_diag - [G_E_min, G_E_max]) < 1e-12
 
     H_range_diag = collect(specrange(Ĥ, method = :diag))
     @test norm(H_range_diag - G_range_diag) < 1e-12
 
-    G_range_arnoldi = collect(specrange(G̃, method = :arnoldi, m_max = 100))
+    G_range_arnoldi = collect(specrange(G, method = :arnoldi, m_max = 100))
     @test eltype(G_range_arnoldi) ≡ Float64
     @test norm(G_range_arnoldi - [H_E_min, H_E_max]) < 1e-2
     # `specrange(Ĥ, method=:arnoldi)` isn't very exact, so we don't
@@ -75,9 +75,9 @@ end
     ϵ₂ = t -> 1.0
     Ĥ_of_t = (Ĥ₀, (Ĥ₁, ϵ₁), (Ĥ₂, ϵ₂))
     vals_dict = IdDict(ϵ₁ => 1.0, ϵ₂ => 1.0)
-    G̃_of_t = GradGenerator(Ĥ_of_t)
+    G_of_t = GradGenerator(Ĥ_of_t)
     Ĥ = evaluate(Ĥ_of_t; vals_dict)
-    G̃ = evaluate(G̃_of_t; vals_dict)
+    G = evaluate(G_of_t; vals_dict)
 
     G_expected = Array([
          Ĥ    Zero  Ĥ₁
@@ -85,27 +85,27 @@ end
         Zero  Zero  Ĥ
     ])
 
-    G = Array(G̃)
-    @test G isa Matrix{ComplexF64}
+    G_full = Array(G)
+    @test G_full isa Matrix{ComplexF64}
 
-    @test norm(G_expected - G) < 1e-12
+    @test norm(G_expected - G_full) < 1e-12
 
-    @test maximum(imag.(eigvals(G))) < 1e-15
+    @test maximum(imag.(eigvals(G_full))) < 1e-15
     @test maximum(imag.(eigvals(Array(Ĥ)))) < 1e-15
 
     H_E_min = minimum(real.(eigvals(Array(Ĥ))))
     H_E_max = maximum(real.(eigvals(Array(Ĥ))))
 
-    G_E_min = minimum(real.(eigvals(G)))
-    G_E_max = maximum(real.(eigvals(G)))
+    G_E_min = minimum(real.(eigvals(G_full)))
+    G_E_max = maximum(real.(eigvals(G_full)))
     @test abs(H_E_min - G_E_min) < 1e-12
     @test abs(H_E_max - G_E_max) < 1e-12
 
-    G_range_diag = collect(specrange(G̃, method = :diag))
+    G_range_diag = collect(specrange(G, method = :diag))
     @test eltype(G_range_diag) ≡ Float64
     @test norm(G_range_diag - [G_E_min, G_E_max]) < 1e-12
 
-    G_range_arnoldi = collect(specrange(G̃, method = :arnoldi, m_max = 100))
+    G_range_arnoldi = collect(specrange(G, method = :arnoldi, m_max = 100))
     @test eltype(G_range_arnoldi) ≡ Float64
     @test norm(G_range_arnoldi - [G_E_min, G_E_max]) < 0.2
 

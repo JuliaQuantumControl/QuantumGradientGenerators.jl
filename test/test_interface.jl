@@ -19,11 +19,11 @@ using StableRNGs: StableRNG
 
     rng = StableRNG(1179926107)
     N = 10
-    Ψ = random_state_vector(N; rng)
-    Ψ̃ = GradVector(Ψ, 2)
-    @test check_state(Ψ̃)
+    Ψ₀ = random_state_vector(N; rng)
+    Ψ = GradVector(Ψ₀, 2)
+    @test check_state(Ψ)
 
-    @test norm(2.2 * Ψ̃ - Ψ̃ * 2.2) < 1e-14
+    @test norm(2.2 * Ψ - Ψ * 2.2) < 1e-14
 
 end
 
@@ -32,14 +32,14 @@ end
 
     rng = StableRNG(2188051723)
     N = 10
-    Ψ = SVector{N,ComplexF64}(random_state_vector(N; rng))
-    Ψ̃ = GradVector(Ψ, 2)
-    @test check_state(Ψ̃)
+    Ψ₀ = SVector{N,ComplexF64}(random_state_vector(N; rng))
+    Ψ = GradVector(Ψ₀, 2)
+    @test check_state(Ψ)
 
-    @test norm(2.2 * Ψ̃ - Ψ̃ * 2.2) < 1e-14
+    @test norm(2.2 * Ψ - Ψ * 2.2) < 1e-14
 
-    Ψ̃2 = similar(Ψ̃)
-    @test Ψ̃2 isa GradVector{2,<:MVector}
+    Ψ2 = similar(Ψ)
+    @test Ψ2 isa GradVector{2,<:MVector}
 
     # We've had propagators use code like
     #
@@ -47,8 +47,8 @@ end
     #
     # which relies on being able to convert mutable types back to their
     # immutable version
-    Ψ̃3 = convert(typeof(Ψ̃), Ψ̃2)
-    @test typeof(Ψ̃3) == typeof(Ψ̃)
+    Ψ3 = convert(typeof(Ψ), Ψ2)
+    @test typeof(Ψ3) == typeof(Ψ)
 
 end
 
@@ -66,12 +66,12 @@ end
 
     tlist = collect(range(0, 10; length = 101))
 
-    G̃_of_t = GradGenerator(Ĥ_of_t)
+    G_of_t = GradGenerator(Ĥ_of_t)
 
-    Ψ = random_state_vector(N; rng)
-    Ψ̃ = GradVector(Ψ, length(get_controls(G̃_of_t)))
+    Ψ₀ = random_state_vector(N; rng)
+    Ψ = GradVector(Ψ₀, length(get_controls(G_of_t)))
 
-    @test check_generator(G̃_of_t; state = Ψ̃, tlist, for_gradient_optimization = false)
+    @test check_generator(G_of_t; state = Ψ, tlist, for_gradient_optimization = false)
 
 end
 
@@ -89,12 +89,12 @@ end
 
     tlist = collect(range(0, 10; length = 101))
 
-    G̃_of_t = GradGenerator(Ĥ_of_t)
+    G_of_t = GradGenerator(Ĥ_of_t)
 
-    Ψ = SVector{N,ComplexF64}(random_state_vector(N; rng))
-    Ψ̃ = GradVector(Ψ, length(get_controls(G̃_of_t)))
+    Ψ₀ = SVector{N,ComplexF64}(random_state_vector(N; rng))
+    Ψ = GradVector(Ψ₀, length(get_controls(G_of_t)))
 
-    @test check_generator(G̃_of_t; state = Ψ̃, tlist, for_gradient_optimization = false)
+    @test check_generator(G_of_t; state = Ψ, tlist, for_gradient_optimization = false)
 
 end
 
@@ -104,55 +104,54 @@ end
     rng = StableRNG(3317751223)
     N = 5
     L = 2
-    G = Matrix{ComplexF64}(I, N, N)
-    mu = [rand(rng, ComplexF64, N, N) for _ = 1:L]
-    op = GradgenOperator{L,Matrix{ComplexF64},Matrix{ComplexF64}}(G, mu)
-    state = GradVector(rand(rng, ComplexF64, N), L)
+    H = Matrix{ComplexF64}(I, N, N)
+    μ = [rand(rng, ComplexF64, N, N) for _ = 1:L]
+    G = GradgenOperator{L,Matrix{ComplexF64},Matrix{ComplexF64}}(H, μ)
+    Ψ = GradVector(rand(rng, ComplexF64, N), L)
 
     # supports_matrix_interface reports true for matrix-backed GradgenOperator
-    @test supports_matrix_interface(typeof(op))
+    @test supports_matrix_interface(typeof(G))
 
     # check_operator passes the full matrix interface check including for_expval
-    @test check_operator(op; state, for_expval = true)
+    @test check_operator(G; state = Ψ, for_expval = true)
 
     # getindex is consistent with the dense Array representation
-    dense = Array(op)
-    @test all(op[i, j] ≈ dense[i, j] for i = 1:size(op, 1), j = 1:size(op, 2))
+    dense = Array(G)
+    @test all(G[i, j] ≈ dense[i, j] for i = 1:size(G, 1), j = 1:size(G, 2))
 
     # length
-    @test length(op) == prod(size(op))
+    @test length(G) == prod(size(G))
 
-    # iterate visits elements in column-major order, consistent with vec(Array(op))
-    @test all(collect(op) .≈ vec(dense))
+    # iterate visits elements in column-major order, consistent with vec(Array(G))
+    @test all(collect(G) .≈ vec(dense))
 
-    # 3-arg mul! agrees with 5-arg mul!(Phi, G, Psi, true, false)
-    Psi = GradVector(rand(rng, ComplexF64, N), L)
-    Phi1 = GradVector(zeros(ComplexF64, N), L)
-    Phi2 = GradVector(zeros(ComplexF64, N), L)
-    mul!(Phi1, op, Psi)
-    mul!(Phi2, op, Psi, true, false)
-    @test norm(Phi1 - Phi2) < 1e-14
+    # 3-arg mul! agrees with 5-arg mul!(Φ, G, Ψ, true, false)
+    Φ1 = GradVector(zeros(ComplexF64, N), L)
+    Φ2 = GradVector(zeros(ComplexF64, N), L)
+    mul!(Φ1, G, Ψ)
+    mul!(Φ2, G, Ψ, true, false)
+    @test norm(Φ1 - Φ2) < 1e-14
 
-    # 3-arg dot(Psi, op, Phi) matches dot(Psi, op * Phi)
-    Psi2 = GradVector(rand(rng, ComplexF64, N), L)
-    @test dot(state, op, Psi2) ≈ dot(state, op * Psi2)
+    # 3-arg dot(Ψ, G, Φ) matches dot(Ψ, G * Φ)
+    Φ = GradVector(rand(rng, ComplexF64, N), L)
+    @test dot(Ψ, G, Φ) ≈ dot(Ψ, G * Φ)
 
-    # similar(op) returns a dense Array of the same eltype and size (matching Operator pattern)
-    op_sim = similar(op)
-    @test op_sim isa Array{eltype(op)}
-    @test size(op_sim) == size(op)
+    # similar(G) returns a dense Array of the same eltype and size (matching Operator pattern)
+    G_sim = similar(G)
+    @test G_sim isa Array{eltype(G)}
+    @test size(G_sim) == size(G)
 
-    # similar(op, S) returns a dense Array of type S with matching size
-    @test similar(op, Float64) isa Array{Float64}
-    @test size(similar(op, Float64)) == size(op)
+    # similar(G, S) returns a dense Array of type S with matching size
+    @test similar(G, Float64) isa Array{Float64}
+    @test size(similar(G, Float64)) == size(G)
 
-    # similar(op, dims) returns a dense Array with given dims
-    @test similar(op, (3, 4)) isa Array{eltype(op)}
-    @test size(similar(op, (3, 4))) == (3, 4)
+    # similar(G, dims) returns a dense Array with given dims
+    @test similar(G, (3, 4)) isa Array{eltype(G)}
+    @test size(similar(G, (3, 4))) == (3, 4)
 
-    # similar(op, S, dims) returns a dense Array of type S with given dims
-    @test similar(op, Float64, (3, 4)) isa Array{Float64}
-    @test size(similar(op, Float64, (3, 4))) == (3, 4)
+    # similar(G, S, dims) returns a dense Array of type S with given dims
+    @test similar(G, Float64, (3, 4)) isa Array{Float64}
+    @test size(similar(G, Float64, (3, 4))) == (3, 4)
 
 end
 
@@ -162,23 +161,23 @@ end
     rng = StableRNG(1602052280)
     N = 5
     L = 2
-    G = rand(rng, ComplexF64, N, N)
-    mu = [rand(rng, ComplexF64, N, N) for _ = 1:L]
-    op = GradgenOperator{L,Matrix{ComplexF64},Matrix{ComplexF64}}(G, mu)
-    dense = Array(op)
+    H = rand(rng, ComplexF64, N, N)
+    μ = [rand(rng, ComplexF64, N, N) for _ = 1:L]
+    G = GradgenOperator{L,Matrix{ComplexF64},Matrix{ComplexF64}}(H, μ)
+    dense = Array(G)
 
-    # Flat-vector layout: [grad_1 | grad_2 | ... | grad_L | state]
+    # Flat-vector layout: [Ψ′₁ | Ψ′₂ | ... | Ψ′_L | Ψ_state]
     Ψ_flat = rand(rng, ComplexF64, N * (L + 1))
     Φ_ref = dense * Ψ_flat
 
     # 3-arg mul! agrees with the dense matrix-vector product
     Φ1 = zeros(ComplexF64, N * (L + 1))
-    mul!(Φ1, op, Ψ_flat)
+    mul!(Φ1, G, Ψ_flat)
     @test norm(Φ1 - Φ_ref) < 1e-14
 
     # 5-arg mul! with α=true, β=false matches the 3-arg result
     Φ2 = zeros(ComplexF64, N * (L + 1))
-    mul!(Φ2, op, Ψ_flat, true, false)
+    mul!(Φ2, G, Ψ_flat, true, false)
     @test norm(Φ2 - Φ_ref) < 1e-14
 
     # 5-arg mul! with non-trivial α, β: Φ ← α * G * Ψ + β * Φ
@@ -186,12 +185,12 @@ end
     β = 1.5 - 0.3im
     Φ3 = rand(rng, ComplexF64, N * (L + 1))
     Φ3_init = copy(Φ3)
-    mul!(Φ3, op, Ψ_flat, α, β)
+    mul!(Φ3, G, Ψ_flat, α, β)
     @test norm(Φ3 - (α * Φ_ref + β * Φ3_init)) < 1e-14
 
     # works with views (the actual ExponentialUtilities use case)
     V = rand(rng, ComplexF64, N * (L + 1), 4)
-    mul!(view(V, :, 2), op, view(V, :, 1))
+    mul!(view(V, :, 2), G, view(V, :, 1))
     @test norm(view(V, :, 2) - dense * view(V, :, 1)) < 1e-14
 
 end
@@ -202,8 +201,8 @@ end
     rng = StableRNG(2618946253)
     N = 5
     L = 2
-    Psi = rand(rng, ComplexF64, N)
-    gradvec = GradVector(Psi, L)
+    Ψ₀ = rand(rng, ComplexF64, N)
+    gradvec = GradVector(Ψ₀, L)
 
     # supports_vector_interface is true for Vector-backed GradVector
     @test supports_vector_interface(typeof(gradvec))
@@ -228,7 +227,7 @@ end
     @test all(gradvec[k] == dense[k] for k in eachindex(gradvec))
 
     # setindex! round-trips through getindex
-    gradvec2 = GradVector(copy(Psi), L)
+    gradvec2 = GradVector(copy(Ψ₀), L)
     for k = 1:length(gradvec2)
         gradvec2[k] = gradvec[k]
     end
@@ -250,8 +249,8 @@ end
     rng = StableRNG(167987434)
     N = 5
     L = 2
-    Psi = SVector{N,ComplexF64}(rand(rng, ComplexF64, N))
-    gradvec = GradVector(Psi, L)
+    Ψ₀ = SVector{N,ComplexF64}(rand(rng, ComplexF64, N))
+    gradvec = GradVector(Ψ₀, L)
 
     # SVector-backed GradVector: supports_vector_interface follows the component type
     @test supports_vector_interface(typeof(gradvec))
@@ -272,8 +271,8 @@ end
     N = 5
     L = 2
     # Matrix is not an AbstractVector, so supports_vector_interface returns false
-    Psi = rand(rng, ComplexF64, N, N)
-    gradvec = GradVector(Psi, L)
+    Ψ₀ = rand(rng, ComplexF64, N, N)
+    gradvec = GradVector(Ψ₀, L)
 
     @test !supports_vector_interface(typeof(gradvec))
 
@@ -302,15 +301,15 @@ end
     rng = StableRNG(1276996367)
     N = 5
     L = 2
-    G = NonMatrixOp(rand(rng, ComplexF64, N, N))
-    mu = [NonMatrixOp(rand(rng, ComplexF64, N, N)) for _ = 1:L]
-    op = GradgenOperator{L,NonMatrixOp,NonMatrixOp}(G, mu)
+    H = NonMatrixOp(rand(rng, ComplexF64, N, N))
+    μ = [NonMatrixOp(rand(rng, ComplexF64, N, N)) for _ = 1:L]
+    G = GradgenOperator{L,NonMatrixOp,NonMatrixOp}(H, μ)
 
-    @test !supports_matrix_interface(typeof(op))
+    @test !supports_matrix_interface(typeof(G))
 
     # Matrix interface methods must throw an error when not supported
-    @test_throws "does not support the matrix interface" op[1, 1]
-    @test_throws "does not support the matrix interface" length(op)
-    @test_throws "does not support the matrix interface" iterate(op)
+    @test_throws "does not support the matrix interface" G[1, 1]
+    @test_throws "does not support the matrix interface" length(G)
+    @test_throws "does not support the matrix interface" iterate(G)
 
 end

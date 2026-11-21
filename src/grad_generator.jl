@@ -8,55 +8,63 @@ import QuantumControl.QuantumPropagators.Controls: get_parameters
 import QuantumControl.QuantumPropagators: _exp_prop_convert_operator
 
 
-@doc raw"""Extended generator for the standard dynamic gradient.
+@doc raw"""Time-dependent gradient generator.
 
 ```julia
-G̃ = GradGenerator(G)
+G_of_t = GradGenerator(H)
 ```
 
-contains the original time-dependent generator `G` (a Hamiltonian or
-Liouvillian) in `G̃.G`, a vector of control derivatives ``∂G/∂ϵₗ(t)`` in
-`G̃.control_derivs`, and the controls in `G̃.controls`.
+for a time-dependent dynamical generator `H` (a Hamiltonian or Liouvillian
+``\hat{H}(t)``) that depends on the controls ``\epsilon_1(t), \dots, \epsilon_L(t)``,
+constructs the gradient generator ``G[\hat{H}](t)``. It contains `H` in
+`G_of_t.H`, the control derivatives
+``\hat{\mu}_l(t) = \partial \hat{H}/\partial \epsilon_l(t)`` in
+`G_of_t.control_derivs`, and the controls in `G_of_t.controls`.
 
-For a generator ``G = Ĥ(t) = Ĥ₀ + ϵ₁(t) Ĥ₁ + … +  ϵₙ(t) Ĥₙ``, this extended
-generator encodes the block-matrix
+For a dynamical generator ``\hat{H}(t) = \hat{H}_0 + \sum_l \epsilon_l(t) \hat{H}_l``,
+with ``\hat{\mu}_l = \hat{H}_l``, the gradient generator encodes the block
+matrix
 
 ```math
-G̃ = \begin{pmatrix}
-         Ĥ(t)  &  0    &  \dots   &  0     &  Ĥ₁     \\
-         0     &  Ĥ(t) &  \dots   &  0     &  Ĥ₂     \\
-    \vdots     &       &  \ddots  &        &  \vdots \\
-         0     &  0    &  \dots   &  Ĥ(t)  &  Ĥₙ     \\
-         0     &  0    &  \dots   &  0     &  Ĥ(t)
-\end{pmatrix}
+G[\hat{H}] = \begin{pmatrix}
+    \hat{H}  &  0       &  \dots   &  0        &  \hat{\mu}_1 \\
+    0        &  \hat{H} &  \dots   &  0        &  \hat{\mu}_2 \\
+    \vdots   &          &  \ddots  &           &  \vdots      \\
+    0        &  0       &  \dots   &  \hat{H}  &  \hat{\mu}_L \\
+    0        &  0       &  \dots   &  0        &  \hat{H}
+\end{pmatrix}\,.
 ```
 
-Note that the ``∂G/∂ϵₗ(t)`` (``Ĥₗ`` in the above example) may be
-time-dependent, to account for the possibility of non-linear control terms.
+The control derivatives ``\hat{\mu}_l`` may be time-dependent, to account for
+non-linear controls.
+
+Plugging in values for the controls with
+[`evaluate`](@extref QuantumPropagators.Controls.evaluate) results in a static
+[`GradgenOperator`](@ref).
 """
-struct GradGenerator{GT,CDT,CT}
-    G::GT
+struct GradGenerator{HT,CDT,CT}
+    H::HT
     control_derivs::Vector{CDT}
     controls::Vector{CT}
 
-    function GradGenerator(G::GT) where {GT}
-        controls = collect(get_controls(G))
-        control_derivs = get_control_derivs(G, controls)
+    function GradGenerator(H::HT) where {HT}
+        controls = collect(get_controls(H))
+        control_derivs = get_control_derivs(H, controls)
         CT = eltype(controls)
         CDT = eltype(control_derivs)
-        new{GT,CDT,CT}(G, control_derivs, controls)
+        new{HT,CDT,CT}(H, control_derivs, controls)
     end
 
 end
 
 
-function get_controls(gradgen::GradGenerator)
-    return get_controls(gradgen.G)
+function get_controls(G_of_t::GradGenerator)
+    return get_controls(G_of_t.H)
 end
 
 
-function get_parameters(gradgen::GradGenerator)
-    return get_parameters(gradgen.G)
+function get_parameters(G_of_t::GradGenerator)
+    return get_parameters(G_of_t.H)
 end
 
 
