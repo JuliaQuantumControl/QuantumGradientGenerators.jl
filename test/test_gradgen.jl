@@ -214,7 +214,7 @@ using QuantumPropagators.Controls: evaluate
     Ĥ_adj_of_t = (copy(Ĥ₀'), (copy(Ĥ₁'), ϵ₁), (copy(Ĥ₂'), ϵ₂))
     G_adj_of_t = GradGenerator(Ĥ_adj_of_t)
     G_adj = evaluate(G_adj_of_t; vals_dict)
-    newton!(χ, G_adj, -dt, wrk)
+    newton!(χ, G_adj, -dt, wrk_bw)
     χ_out = copy(χ)
     Ψtgt_Û = χ_out.state
     τ_bw = Ψtgt_Û ⋅ Ψ₀
