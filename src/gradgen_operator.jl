@@ -10,55 +10,59 @@ import QuantumControl.QuantumPropagators.Interfaces:
     supports_inplace, supports_matrix_interface
 
 
-"""Static generator for the dynamic gradient.
+@doc raw"""Static gradient generator.
 
 ```julia
 using QuantumPropagators.Controls: evaluate
 
-G::GradgenOperator = evaluate(gradgen::GradGenerator; vals_dict)
+G = evaluate(G_of_t::GradGenerator, args...; vals_dict)
 
-G = GradgenOperator(G.G, G.control_deriv_ops)
+G = GradgenOperator(H, control_derivs)
 ```
 
-is the result of plugging in specific values for all controls in a
-[`GradGenerator`](@ref).
+is the gradient generator ``G[\hat{H}]`` for specific values of all controls,
+obtained by evaluating a time-dependent [`GradGenerator`](@ref), or directly
+from a static dynamical generator `H` (``\hat{H}``) and a vector
+`control_derivs` of static control derivatives ``\hat{\mu}_l``. These are
+available as `G.H` and `G.control_derivs`.
 
-The resulting object can be multiplied directly with a [`GradVector`](@ref),
-e.g., in the process of evaluating a piecewise-constant time propagation.
+The resulting object can be multiplied directly with a gradient vector
+[`GradVector`](@ref), e.g., in the process of evaluating a piecewise-constant
+time propagation.
 """
-struct GradgenOperator{num_controls,GT,CGT}
-    G::GT
-    control_deriv_ops::Vector{CGT}
+struct GradgenOperator{num_controls,HT,CDT}
+    H::HT
+    control_derivs::Vector{CDT}
 end
 
 
-function GradgenOperator(G, control_deriv_ops)
-    num_controls = length(control_deriv_ops)
-    GT = typeof(G)
-    CGT = eltype(control_deriv_ops)
-    return GradgenOperator{num_controls,GT,CGT}(G, control_deriv_ops)
+function GradgenOperator(H, control_derivs)
+    num_controls = length(control_derivs)
+    HT = typeof(H)
+    CDT = eltype(control_derivs)
+    return GradgenOperator{num_controls,HT,CDT}(H, control_derivs)
 end
 
 
-function get_controls(O1::GradgenOperator)
+function get_controls(::GradgenOperator)
     return Tuple([])
 end
 
 
-function random_state(H::GradgenOperator; rng = GLOBAL_RNG, _...)
-    state = random_state(H.G; rng)
-    num_controls = length(H.control_deriv_ops)
-    grad_states = [random_state(H.G; rng) for _ in eachindex(H.control_deriv_ops)]
+function random_state(G::GradgenOperator; rng = GLOBAL_RNG, _...)
+    state = random_state(G.H; rng)
+    num_controls = length(G.control_derivs)
+    grad_states = [random_state(G.H; rng) for _ in eachindex(G.control_derivs)]
     return GradVector{num_controls,typeof(state)}(state, grad_states)
 end
 
 
 _exp_prop_convert_operator(::GradgenOperator) = Matrix{ComplexF64}
 
-supports_inplace(::Type{GradgenOperator{N,GT,CGT}}) where {N,GT,CGT} = supports_inplace(GT)
-# Note: `evaluate!` for `GradgenOperator` reassigns `control_deriv_ops[i]` via
-# vector element assignment, so the in-place capability of `CGT` is irrelevant.
-# Only the underlying operator `GT` needs to support in-place evaluation.
+supports_inplace(::Type{GradgenOperator{N,HT,CDT}}) where {N,HT,CDT} = supports_inplace(HT)
+# Note: `evaluate!` for `GradgenOperator` reassigns `control_derivs[l]` via
+# vector element assignment, so the in-place capability of `CDT` is irrelevant.
+# Only the dynamical generator `HT` needs to support in-place evaluation.
 
-supports_matrix_interface(::Type{<:GradgenOperator{N,GT,CGT}}) where {N,GT,CGT} =
-    supports_matrix_interface(GT) && supports_matrix_interface(CGT)
+supports_matrix_interface(::Type{<:GradgenOperator{N,HT,CDT}}) where {N,HT,CDT} =
+    supports_matrix_interface(HT) && supports_matrix_interface(CDT)

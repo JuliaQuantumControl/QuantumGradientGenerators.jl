@@ -5,21 +5,15 @@
 import QuantumControl.QuantumPropagators.Controls: evaluate, evaluate!
 
 
-function evaluate(O::GradgenOperator, args...; kwargs...)
-    return O
+function evaluate(G::GradgenOperator, args...; kwargs...)
+    return G
 end
 
 
-function evaluate!(
-    G::GradgenOperator,
-    gradgen::GradGenerator,
-    args...;
-    vals_dict = IdDict()
-)
-    evaluate!(G.G, gradgen.G, args...; vals_dict)
-    for (i, control) in enumerate(gradgen.controls)
-        μ = gradgen.control_derivs[i]
-        G.control_deriv_ops[i] = evaluate(μ, args...; vals_dict)
+function evaluate!(G::GradgenOperator, G_of_t::GradGenerator, args...; vals_dict = IdDict())
+    evaluate!(G.H, G_of_t.H, args...; vals_dict)
+    for (l, μ) in enumerate(G_of_t.control_derivs)
+        G.control_derivs[l] = evaluate(μ, args...; vals_dict)
         # In most cases (for linear controls), evaluate(μ, ...) = μ
         # Hence, we're not using `copyto!`.
     end
@@ -27,11 +21,8 @@ function evaluate!(
 end
 
 
-function evaluate(gradgen::GradGenerator, args...; vals_dict = IdDict())
-    G = evaluate(gradgen.G, args...; vals_dict)
-    control_deriv_ops = [evaluate(μ, args...; vals_dict) for μ ∈ gradgen.control_derivs]
-    num_controls = length(control_deriv_ops)
-    GT = typeof(G)
-    CGT = eltype(control_deriv_ops)
-    GradgenOperator{num_controls,GT,CGT}(G, control_deriv_ops)
+function evaluate(G_of_t::GradGenerator, args...; vals_dict = IdDict())
+    H = evaluate(G_of_t.H, args...; vals_dict)
+    control_derivs = [evaluate(μ, args...; vals_dict) for μ ∈ G_of_t.control_derivs]
+    return GradgenOperator(H, control_derivs)
 end
