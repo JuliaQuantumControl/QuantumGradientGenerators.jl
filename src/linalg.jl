@@ -97,7 +97,7 @@ LinearAlgebra.ishermitian(G::GradgenOperator) = false
 
 
 function Base.isreal(G::GradgenOperator)
-    return (isreal(G.H) && all(isreal(μ for μ in G.control_derivs)))
+    return (isreal(G.H) && all(isreal(μ) for μ in G.control_derivs))
 end
 
 
