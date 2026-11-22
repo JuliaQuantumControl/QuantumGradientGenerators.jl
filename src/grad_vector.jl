@@ -13,41 +13,41 @@ import QuantumControl.QuantumPropagators.Interfaces:
 Ψ = GradVector(state, num_controls)
 ```
 
-creates a gradient vector ``\Psi`` for ``L`` = `num_controls` controls. It
+creates a gradient vector ``Ψ`` for ``L`` = `num_controls` controls. It
 corresponds to the block column vector
 
 ```math
-\Psi = \begin{pmatrix}
-|\Psi^\prime_1⟩ \\ \vdots \\ |\Psi^\prime_L⟩ \\ |\Psi⟩
+Ψ = \begin{pmatrix}
+|Ψ^\prime_1⟩ \\ \vdots \\ |Ψ^\prime_L⟩ \\ |Ψ⟩
 \end{pmatrix}\,,
 ```
 
-with the state ``|\Psi⟩`` in `Ψ.state` and the gradient states ``|\Psi^\prime_l⟩``
-in `Ψ.grad_states[l]`. Note that the gradient vector ``\Psi`` is written without
-a ket, to distinguish it from the state ``|\Psi⟩``. Upon initialization,
-``|\Psi⟩`` is a copy of `state`, and the gradient states are zero.
+with the state ``|Ψ⟩`` in `Ψ.state` and the gradient states ``|Ψ^\prime_l⟩``
+in `Ψ.grad_states[l]`. Note that the gradient vector ``Ψ`` is written without
+a ket, to distinguish it from the state ``|Ψ⟩``. Upon initialization,
+``|Ψ⟩`` is a copy of `state`, and the gradient states are zero.
 
 With a matching gradient generator ``G = G[\hat{H}]``, see
 [`GradGenerator`](@ref), we have
 
 ```math
-G \Psi = \begin{pmatrix}
-\hat{H} |\Psi^\prime_1⟩ + \hat{\mu}_1 |\Psi⟩ \\
+G Ψ = \begin{pmatrix}
+\hat{H} |Ψ^\prime_1⟩ + \hat{μ}_1 |Ψ⟩ \\
 \vdots \\
-\hat{H} |\Psi^\prime_L⟩ + \hat{\mu}_L |\Psi⟩ \\
-\hat{H} |\Psi⟩
+\hat{H} |Ψ^\prime_L⟩ + \hat{μ}_L |Ψ⟩ \\
+\hat{H} |Ψ⟩
 \end{pmatrix}
 ```
 
 and
 
 ```math
-e^{-i G dt} \begin{pmatrix} 0 \\ \vdots \\ 0 \\ |\Psi⟩ \end{pmatrix}
+e^{-i G dt} \begin{pmatrix} 0 \\ \vdots \\ 0 \\ |Ψ⟩ \end{pmatrix}
 = \begin{pmatrix}
-\frac{\partial}{\partial \epsilon_1} e^{-i \hat{H} dt} |\Psi⟩ \\
+\frac{\partial}{\partial ϵ_1} e^{-i \hat{H} dt} |Ψ⟩ \\
 \vdots \\
-\frac{\partial}{\partial \epsilon_L} e^{-i \hat{H} dt} |\Psi⟩ \\
-e^{-i \hat{H} dt} |\Psi⟩
+\frac{\partial}{\partial ϵ_L} e^{-i \hat{H} dt} |Ψ⟩ \\
+e^{-i \hat{H} dt} |Ψ⟩
 \end{pmatrix}\,.
 ```
 """

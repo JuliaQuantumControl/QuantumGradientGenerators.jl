@@ -4,6 +4,7 @@
 
 using QuantumGradientGenerators
 using Documenter
+using DocumenterCitations
 using DocumenterInterLinks
 using Pkg
 
@@ -23,6 +24,7 @@ links = InterLinks(
     "Julia" => "https://docs.julialang.org/en/v1/",
     "QuantumPropagators" => "https://juliaquantumcontrol.github.io/QuantumPropagators.jl/$DEV_OR_STABLE",
     "QuantumControl" => "https://juliaquantumcontrol.github.io/QuantumControl.jl/$DEV_OR_STABLE",
+    "GRAPE" => "https://juliaquantumcontrol.github.io/GRAPE.jl/$DEV_OR_STABLE",
 )
 
 fallbacks = ExternalFallbacks(
@@ -32,8 +34,17 @@ fallbacks = ExternalFallbacks(
 
 println("Starting makedocs")
 
+bib = CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"); style = :numeric)
+
+PAGES = [
+    "Home" => "index.md",
+    "Background" => "background.md",
+    "API" => "api.md",
+    "References" => "references.md",
+]
+
 makedocs(;
-    plugins = [links, fallbacks],
+    plugins = [bib, links, fallbacks],
     authors = AUTHORS,
     sitename = "QuantumGradientGenerators.jl",
     doctest = false,
@@ -48,9 +59,21 @@ makedocs(;
                 "https://juliaquantumcontrol.github.io/QuantumControl.jl/dev/assets/topbar/topbar.js"
             ),
         ],
+        mathengine = MathJax3(
+            Dict(
+                :loader => Dict("load" => ["[tex]/physics"]),
+                :tex => Dict(
+                    "inlineMath" => [["\$", "\$"], ["\\(", "\\)"]],
+                    "tags" => "ams",
+                    "packages" =>
+                        ["base", "ams", "autoload", "configmacros", "physics"],
+                    "macros" => Dict("ii" => "{\\mathrm{i}}"),
+                ),
+            )
+        ),
         footer = "[$NAME.jl]($GITHUB) v$VERSION docs powered by [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl)."
     ),
-    pages = ["Home" => "index.md", "API" => "api.md",]
+    pages = PAGES,
 )
 
 println("Finished makedocs")
