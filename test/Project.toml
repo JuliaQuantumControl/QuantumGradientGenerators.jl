@@ -1,5 +1,9 @@
 [deps]
+DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
+ExponentialUtilities = "d4d017d3-3776-5f7e-afef-a10c40355c18"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 QuantumControl = "8a270532-f23f-47a8-83a9-b33d10cad486"
 QuantumControlTestUtils = "d3fd27c9-1dfb-4e67-b0c0-90d0d87a1e48"
 QuantumGradientGenerators = "a563f35e-61db-434d-8c01-8b9e3ccdfd85"
@@ -14,5 +18,9 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 QuantumGradientGenerators = {path = ".."}
 
 [compat]
+DiffEqBase = "6.147, 7"
+ExponentialUtilities = "1.17.1"
+ForwardDiff = "0.10, 1"
+OrdinaryDiffEq = "6.62, 7"
 QuantumPropagators = "0.9"
 julia = "1.10"

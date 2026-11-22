@@ -237,8 +237,14 @@ function Base.similar(Ψ::GradVector{num_controls,T}) where {num_controls,T}
     return GradVector{num_controls,typeof(state_sim)}(state_sim, grad_states_sim)
 end
 
-# similar(Ψ, S) calls length(Ψ), which will error if !supports_vector_interface
-Base.similar(Ψ::GradVector, ::Type{S}) where {S} = Vector{S}(undef, length(Ψ))
+# A gradient vector with element type S. ODE solvers (OrdinaryDiffEq) use this
+# for the buffer of their error estimate, so it must have the block structure
+# of `Ψ` for the error norm to distinguish the state from the gradient states.
+function Base.similar(Ψ::GradVector{num_controls,T}, ::Type{S}) where {num_controls,T,S}
+    state_sim = similar(Ψ.state, S)
+    grad_states_sim = [similar(Ψ′, S) for Ψ′ ∈ Ψ.grad_states]
+    return GradVector{num_controls,typeof(state_sim)}(state_sim, grad_states_sim)
+end
 
 # similar(Ψ, dims) calls eltype(Ψ) but not length/size, so no vector interface needed
 Base.similar(Ψ::GradVector, dims::Tuple{Vararg{Int}}) = Array{eltype(Ψ)}(undef, dims)

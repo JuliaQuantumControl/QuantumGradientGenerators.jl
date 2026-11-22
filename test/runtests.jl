@@ -23,6 +23,16 @@ using SafeTestsets
         include("test_properties.jl")
     end
 
+    print("\n* OrdinaryDiffEq (test_ode.jl):")
+    @time @safetestset "OrdinaryDiffEq" begin
+        include("test_ode.jl")
+    end
+
+    print("\n* ExponentialUtilities (test_expv.jl):")
+    @time @safetestset "ExponentialUtilities" begin
+        include("test_expv.jl")
+    end
+
     print("\n* Interface (test_interface.jl):")
     @time @safetestset "Interface" begin
         include("test_interface.jl")
