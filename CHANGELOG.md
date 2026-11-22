@@ -21,6 +21,7 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 * Added: A "Background" page in the documentation that proves that propagating a gradient vector under a gradient generator yields the exact derivatives of the propagated state, interprets gradient vectors as dual numbers in forward-mode automatic differentiation, and extends the theory to time-dependent generators and to arbitrary control parameters (the basis for GOAT-type methods)
 * Added: `eigvals`, `tr`, and `det` for a `GradgenOperator`, evaluated from the dynamical generator `G.H`
 * Added: A section about the properties of the gradient generator (spectrum, Jordan structure, non-normality, adjoint), and a discussion of the "flat", "frozen", and "full dual" semantics of propagating gradient vectors with different numerical methods, on the "Background" page of the documentation
+* Added: How-to guides in the documentation for the backward propagation of gradient vectors, for gradient vectors with the Chebychev propagator, and for controlling the time steps of an adaptive ODE solver for gradient vectors
 * Fixed: `isreal` for a `GradgenOperator` no longer throws a `MethodError`
 * Fixed: `norm(Ψ)` for a `GradVector` is now the Euclidean norm of the block vector, consistent with `dot`. Previously, it was the sum of the norms of the state and the gradient states
 
