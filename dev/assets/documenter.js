@@ -6,8 +6,6 @@ requirejs.config({
     'jquery': 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min',
     'headroom': 'https://cdnjs.cloudflare.com/ajax/libs/headroom/0.12.0/headroom.min',
     'highlight': 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min',
-    'katex-auto-render': 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/contrib/auto-render.min',
-    'katex': 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min',
     'headroom-jquery': 'https://cdnjs.cloudflare.com/ajax/libs/headroom/0.12.0/jQuery.headroom.min',
     'highlight-julia-repl': 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/julia-repl.min',
   },
@@ -27,39 +25,51 @@ requirejs.config({
     "deps": [
       "highlight"
     ]
-  },
-  "katex-auto-render": {
-    "deps": [
-      "katex"
-    ]
   }
 }});
 ////////////////////////////////////////////////////////////////////////////////
-require(['jquery', 'katex', 'katex-auto-render'], function($, katex, renderMathInElement) {
-$(document).ready(function() {
-  renderMathInElement(
-    document.body,
-    {
-  "delimiters": [
-    {
-      "display": false,
-      "left": "$",
-      "right": "$"
+require([], function() {
+window.MathJax = {
+  "loader": {
+    "load": [
+      "[tex]/physics"
+    ]
+  },
+  "options": {
+    "ignoreHtmlClass": "tex2jax_ignore",
+    "processHtmlClass": "tex2jax_process"
+  },
+  "tex": {
+    "inlineMath": [
+      [
+        "$",
+        "$"
+      ],
+      [
+        "\\(",
+        "\\)"
+      ]
+    ],
+    "macros": {
+      "ii": "{\\mathrm{i}}"
     },
-    {
-      "display": true,
-      "left": "$$",
-      "right": "$$"
-    },
-    {
-      "display": true,
-      "left": "\\[",
-      "right": "\\]"
-    }
-  ]
-}
-  );
-})
+    "packages": [
+      "base",
+      "ams",
+      "autoload",
+      "configmacros",
+      "physics"
+    ],
+    "tags": "ams"
+  }
+};
+
+(function () {
+    var script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg-full.js';
+    script.async = true;
+    document.head.appendChild(script);
+})();
 
 })
 ////////////////////////////////////////////////////////////////////////////////
