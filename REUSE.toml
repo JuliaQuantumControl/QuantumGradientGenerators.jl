@@ -9,3 +9,8 @@ path = [
 ]
 SPDX-FileCopyrightText = "© 2022 Michael Goerz <mail@michaelgoerz.net>"
 SPDX-License-Identifier = "MIT OR CC0-1.0"
+
+[[annotations]]
+path = "docs/src/refs.bib"
+SPDX-FileCopyrightText = "© 2026 Michael Goerz <mail@michaelgoerz.net>"
+SPDX-License-Identifier = "CC0-1.0"

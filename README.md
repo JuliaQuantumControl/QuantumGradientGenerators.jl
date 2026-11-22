@@ -15,15 +15,15 @@ SPDX-License-Identifier: MIT OR CC-BY-4.0
 
 Dynamic Gradients for Quantum Control.
 
-For a [dynamical generator](https://juliaquantumcontrol.github.io/QuantumPropagators.jl/stable/generators/) $\hat{H}$ (a Hamiltonian or Liouvillian) that depends on control functions $\epsilon_1(t), \dots, \epsilon_L(t)$, this package defines the "gradient generator" $G = G[\hat{H}]$ and the "gradient vector" $\Psi = (|\Psi^\prime_1⟩, \dots, |\Psi^\prime_L⟩, |\Psi⟩)^T$, with the state $|\Psi⟩$ and the gradient states $|\Psi^\prime_l⟩$, so that
+For a [dynamical generator](https://juliaquantumcontrol.github.io/QuantumPropagators.jl/stable/generators/) $\hat{H}$ (a Hamiltonian or Liouvillian) that depends on control functions $ϵ_1(t), \dots, ϵ_L(t)$, this package defines the "gradient generator" $G = G[\hat{H}]$ and the "gradient vector" $Ψ = (|Ψ^\prime_1⟩, \dots, |Ψ^\prime_L⟩, |Ψ⟩)^T$, with the state $|Ψ⟩$ and the gradient states $|Ψ^\prime_l⟩$, so that
 
 ```math
-e^{-i G dt} \begin{pmatrix} 0 \\ \vdots \\ 0 \\ |\Psi⟩ \end{pmatrix}
+e^{-i G dt} \begin{pmatrix} 0 \\ \vdots \\ 0 \\ |Ψ⟩ \end{pmatrix}
 = \begin{pmatrix}
-    \frac{\partial}{\partial \epsilon_1} e^{-i \hat{H} dt} |\Psi⟩ \\
+    \frac{\partial}{\partial ϵ_1} e^{-i \hat{H} dt} |Ψ⟩ \\
     \vdots \\
-    \frac{\partial}{\partial \epsilon_L} e^{-i \hat{H} dt} |\Psi⟩ \\
-    e^{-i \hat{H} dt} |\Psi⟩
+    \frac{\partial}{\partial ϵ_L} e^{-i \hat{H} dt} |Ψ⟩ \\
+    e^{-i \hat{H} dt} |Ψ⟩
 \end{pmatrix}\,.
 ```
 

@@ -23,7 +23,7 @@ G = GradgenOperator(H, control_derivs)
 is the gradient generator ``G[\hat{H}]`` for specific values of all controls,
 obtained by evaluating a time-dependent [`GradGenerator`](@ref), or directly
 from a static dynamical generator `H` (``\hat{H}``) and a vector
-`control_derivs` of static control derivatives ``\hat{\mu}_l``. These are
+`control_derivs` of static control derivatives ``\hat{μ}_l``. These are
 available as `G.H` and `G.control_derivs`.
 
 The resulting object can be multiplied directly with a gradient vector

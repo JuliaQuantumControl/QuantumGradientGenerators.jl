@@ -15,27 +15,27 @@ G_of_t = GradGenerator(H)
 ```
 
 for a time-dependent dynamical generator `H` (a Hamiltonian or Liouvillian
-``\hat{H}(t)``) that depends on the controls ``\epsilon_1(t), \dots, \epsilon_L(t)``,
+``\hat{H}(t)``) that depends on the controls ``ϵ_1(t), \dots, ϵ_L(t)``,
 constructs the gradient generator ``G[\hat{H}](t)``. It contains `H` in
 `G_of_t.H`, the control derivatives
-``\hat{\mu}_l(t) = \partial \hat{H}/\partial \epsilon_l(t)`` in
+``\hat{μ}_l(t) = \partial \hat{H}/\partial ϵ_l(t)`` in
 `G_of_t.control_derivs`, and the controls in `G_of_t.controls`.
 
-For a dynamical generator ``\hat{H}(t) = \hat{H}_0 + \sum_l \epsilon_l(t) \hat{H}_l``,
-with ``\hat{\mu}_l = \hat{H}_l``, the gradient generator encodes the block
+For a dynamical generator ``\hat{H}(t) = \hat{H}_0 + \sum_l ϵ_l(t) \hat{H}_l``,
+with ``\hat{μ}_l = \hat{H}_l``, the gradient generator encodes the block
 matrix
 
 ```math
 G[\hat{H}] = \begin{pmatrix}
-    \hat{H}  &  0       &  \dots   &  0        &  \hat{\mu}_1 \\
-    0        &  \hat{H} &  \dots   &  0        &  \hat{\mu}_2 \\
+    \hat{H}  &  0       &  \dots   &  0        &  \hat{μ}_1 \\
+    0        &  \hat{H} &  \dots   &  0        &  \hat{μ}_2 \\
     \vdots   &          &  \ddots  &           &  \vdots      \\
-    0        &  0       &  \dots   &  \hat{H}  &  \hat{\mu}_L \\
+    0        &  0       &  \dots   &  \hat{H}  &  \hat{μ}_L \\
     0        &  0       &  \dots   &  0        &  \hat{H}
 \end{pmatrix}\,.
 ```
 
-The control derivatives ``\hat{\mu}_l`` may be time-dependent, to account for
+The control derivatives ``\hat{μ}_l`` may be time-dependent, to account for
 non-linear controls.
 
 Plugging in values for the controls with

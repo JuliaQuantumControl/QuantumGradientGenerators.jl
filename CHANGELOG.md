@@ -17,6 +17,7 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 * Changed: The field `G` of `GradGenerator` and `GradgenOperator` is now `H`, and the field `control_deriv_ops` of `GradgenOperator` is now `control_derivs`, the same name as in `GradGenerator`. To adapt, replace `G.G` with `G.H` and `G.control_deriv_ops` with `G.control_derivs` for any gradient generator `G`. The positional arguments of the `GradgenOperator` constructor are unchanged
 * Changed: The documentation uses a simplified notation that matches the field names: the dynamical generator `H`, the control derivatives `control_derivs` (μ̂ₗ), the gradient generator `G`, and the gradient vector `Ψ` with the state `Ψ.state` and the gradient states `Ψ.grad_states` (Ψ′ₗ)
 * Added: An overview of the gradient generator and the gradient vector in the documentation
+* Added: A "Background" page in the documentation that proves that propagating a gradient vector under a gradient generator yields the exact derivatives of the propagated state, interprets gradient vectors as dual numbers in forward-mode automatic differentiation, and extends the theory to time-dependent generators and to arbitrary control parameters (the basis for GOAT-type methods)
 * Fixed: `isreal` for a `GradgenOperator` no longer throws a `MethodError`
 
 
