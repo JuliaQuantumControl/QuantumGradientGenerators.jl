@@ -29,6 +29,12 @@ available as `G.H` and `G.control_derivs`.
 The resulting object can be multiplied directly with a gradient vector
 [`GradVector`](@ref), e.g., in the process of evaluating a piecewise-constant
 time propagation.
+
+Since ``G`` is block upper-triangular with ``\hat{H}`` in all diagonal blocks,
+its eigenvalues are those of ``\hat{H}``. Accordingly, `eigvals`, `tr`, `det`,
+and `specrange` (and thus the spectral range used by the Chebychev propagator)
+are evaluated from `G.H`, see the
+[Properties of the gradient generator](@ref Background-Properties).
 """
 struct GradgenOperator{num_controls,HT,CDT}
     H::HT

@@ -11,5 +11,6 @@ include("gradgen_operator.jl")
 include("grad_vector.jl")
 include("evaluate.jl")
 include("linalg.jl")
+include("spectral.jl")
 
 end

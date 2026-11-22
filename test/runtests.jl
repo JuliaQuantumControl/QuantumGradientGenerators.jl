@@ -18,6 +18,11 @@ using SafeTestsets
         include("test_specrad.jl")
     end
 
+    print("\n* Properties (test_properties.jl):")
+    @time @safetestset "Properties" begin
+        include("test_properties.jl")
+    end
+
     print("\n* Interface (test_interface.jl):")
     @time @safetestset "Interface" begin
         include("test_interface.jl")

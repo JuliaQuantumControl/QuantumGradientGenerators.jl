@@ -70,12 +70,13 @@ function LinearAlgebra.axpy!(a, X::GradVector, Y::GradVector)
 end
 
 
+# The Euclidean norm of the block vector, consistent with `dot`
 function LinearAlgebra.norm(Ψ::GradVector)
-    nrm = LinearAlgebra.norm(Ψ.state)
+    nrm_sq = LinearAlgebra.norm(Ψ.state)^2
     for l ∈ eachindex(Ψ.grad_states)
-        nrm += LinearAlgebra.norm(Ψ.grad_states[l])
+        nrm_sq += LinearAlgebra.norm(Ψ.grad_states[l])^2
     end
-    return nrm
+    return sqrt(nrm_sq)
 end
 
 
@@ -93,6 +94,7 @@ function LinearAlgebra.dot(Ψ::GradVector, G::GradgenOperator, Φ::GradVector)
 end
 
 
+# A gradient generator is not normal unless all control derivatives are zero
 LinearAlgebra.ishermitian(G::GradgenOperator) = false
 
 

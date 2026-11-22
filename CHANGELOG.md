@@ -16,9 +16,13 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 
 * Changed: The field `G` of `GradGenerator` and `GradgenOperator` is now `H`, and the field `control_deriv_ops` of `GradgenOperator` is now `control_derivs`, the same name as in `GradGenerator`. To adapt, replace `G.G` with `G.H` and `G.control_deriv_ops` with `G.control_derivs` for any gradient generator `G`. The positional arguments of the `GradgenOperator` constructor are unchanged
 * Changed: The documentation uses a simplified notation that matches the field names: the dynamical generator `H`, the control derivatives `control_derivs` (μ̂ₗ), the gradient generator `G`, and the gradient vector `Ψ` with the state `Ψ.state` and the gradient states `Ψ.grad_states` (Ψ′ₗ)
+* Changed: `specrange` for a `GradgenOperator` now computes the spectral range of the dynamical generator `G.H`, which is the spectral range of the gradient generator. This is more efficient, and it avoids estimating the spectral range of a non-normal matrix with the `:arnoldi` method. With `method=:auto`, the choice between `:diag` and `:arnoldi` is based on the size of `G.H`
 * Added: An overview of the gradient generator and the gradient vector in the documentation
 * Added: A "Background" page in the documentation that proves that propagating a gradient vector under a gradient generator yields the exact derivatives of the propagated state, interprets gradient vectors as dual numbers in forward-mode automatic differentiation, and extends the theory to time-dependent generators and to arbitrary control parameters (the basis for GOAT-type methods)
+* Added: `eigvals`, `tr`, and `det` for a `GradgenOperator`, evaluated from the dynamical generator `G.H`
+* Added: A section about the properties of the gradient generator (spectrum, Jordan structure, non-normality, adjoint), and a discussion of the "flat", "frozen", and "full dual" semantics of propagating gradient vectors with different numerical methods, on the "Background" page of the documentation
 * Fixed: `isreal` for a `GradgenOperator` no longer throws a `MethodError`
+* Fixed: `norm(Ψ)` for a `GradVector` is now the Euclidean norm of the block vector, consistent with `dot`. Previously, it was the sum of the norms of the state and the gradient states
 
 
 ## [v0.1.10] — 2026-09-16
