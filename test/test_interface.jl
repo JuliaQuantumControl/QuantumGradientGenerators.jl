@@ -21,6 +21,12 @@ using StableRNGs: StableRNG
     N = 10
     Ψ₀ = random_state_vector(N; rng)
     Ψ = GradVector(Ψ₀, 2)
+    # Non-zero gradient states: with zero gradient states, any norm of a
+    # GradVector equals the norm of its state, so `check_state` could not
+    # detect a `norm` that is inconsistent with `dot`
+    for l in eachindex(Ψ.grad_states)
+        Ψ.grad_states[l] .= random_state_vector(N; rng)
+    end
     @test check_state(Ψ)
 
     @test norm(2.2 * Ψ - Ψ * 2.2) < 1e-14
@@ -34,6 +40,12 @@ end
     N = 10
     Ψ₀ = SVector{N,ComplexF64}(random_state_vector(N; rng))
     Ψ = GradVector(Ψ₀, 2)
+    # Non-zero gradient states: with zero gradient states, any norm of a
+    # GradVector equals the norm of its state, so `check_state` could not
+    # detect a `norm` that is inconsistent with `dot`
+    for l in eachindex(Ψ.grad_states)
+        Ψ.grad_states[l] = SVector{N,ComplexF64}(random_state_vector(N; rng))
+    end
     @test check_state(Ψ)
 
     @test norm(2.2 * Ψ - Ψ * 2.2) < 1e-14
@@ -208,6 +220,12 @@ end
     L = 2
     Ψ₀ = rand(rng, ComplexF64, N)
     gradvec = GradVector(Ψ₀, L)
+    # Non-zero gradient states: with zero gradient states, any norm of a
+    # GradVector equals the norm of its state, so `check_state` could not
+    # detect a `norm` that is inconsistent with `dot`
+    for l in eachindex(gradvec.grad_states)
+        gradvec.grad_states[l] .= rand(rng, ComplexF64, N)
+    end
 
     # supports_vector_interface is true for Vector-backed GradVector
     @test supports_vector_interface(typeof(gradvec))
@@ -256,6 +274,12 @@ end
     L = 2
     Ψ₀ = SVector{N,ComplexF64}(rand(rng, ComplexF64, N))
     gradvec = GradVector(Ψ₀, L)
+    # Non-zero gradient states: with zero gradient states, any norm of a
+    # GradVector equals the norm of its state, so `check_state` could not
+    # detect a `norm` that is inconsistent with `dot`
+    for l in eachindex(gradvec.grad_states)
+        gradvec.grad_states[l] = SVector{N,ComplexF64}(rand(rng, ComplexF64, N))
+    end
 
     # SVector-backed GradVector: supports_vector_interface follows the component type
     @test supports_vector_interface(typeof(gradvec))

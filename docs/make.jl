@@ -38,6 +38,7 @@ bib = CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"); style = :numer
 
 PAGES = [
     "Home" => "index.md",
+    "How-to Guides" => "howto.md",
     "Background" => "background.md",
     "API" => "api.md",
     "References" => "references.md",
@@ -58,6 +59,7 @@ makedocs(;
             asset(
                 "https://juliaquantumcontrol.github.io/QuantumControl.jl/dev/assets/topbar/topbar.js"
             ),
+            "assets/admonitions.css",
         ],
         mathengine = MathJax3(
             Dict(

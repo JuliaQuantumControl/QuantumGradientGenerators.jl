@@ -4,6 +4,7 @@
 
 using Test
 using LinearAlgebra
+using StableRNGs: StableRNG
 using QuantumPropagators.SpectralRange: specrange
 using QuantumGradientGenerators: GradGenerator
 using QuantumControlTestUtils.RandomObjects: random_matrix
@@ -54,11 +55,16 @@ using QuantumPropagators.Controls: evaluate
     H_range_diag = collect(specrange(Ĥ, method = :diag))
     @test norm(H_range_diag - G_range_diag) < 1e-12
 
-    G_range_arnoldi = collect(specrange(G, method = :arnoldi, m_max = 100))
+    # The spectral range of G is computed from Ĥ
+    G_range_arnoldi =
+        collect(specrange(G, method = :arnoldi, m_max = 100, rng = StableRNG(1)))
     @test eltype(G_range_arnoldi) ≡ Float64
-    @test norm(G_range_arnoldi - [H_E_min, H_E_max]) < 1e-2
-    # `specrange(Ĥ, method=:arnoldi)` isn't very exact, so we don't
-    # compare against that.
+    H_range_arnoldi =
+        collect(specrange(Ĥ, method = :arnoldi, m_max = 100, rng = StableRNG(1)))
+    @test G_range_arnoldi == H_range_arnoldi
+    # The Arnoldi estimate is enlarged to enclose the exact spectral range
+    @test G_range_arnoldi[1] <= H_E_min
+    @test G_range_arnoldi[2] >= H_E_max
 
 end
 
@@ -105,8 +111,11 @@ end
     @test eltype(G_range_diag) ≡ Float64
     @test norm(G_range_diag - [G_E_min, G_E_max]) < 1e-12
 
-    G_range_arnoldi = collect(specrange(G, method = :arnoldi, m_max = 100))
+    G_range_arnoldi =
+        collect(specrange(G, method = :arnoldi, m_max = 100, rng = StableRNG(1)))
     @test eltype(G_range_arnoldi) ≡ Float64
-    @test norm(G_range_arnoldi - [G_E_min, G_E_max]) < 0.2
+    @test G_range_arnoldi[1] <= G_E_min
+    @test G_range_arnoldi[2] >= G_E_max
+    @test norm(G_range_arnoldi - [G_E_min, G_E_max]) < 0.5
 
 end

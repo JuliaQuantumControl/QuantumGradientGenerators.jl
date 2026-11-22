@@ -52,7 +52,7 @@ In the code, a gradient generator `G` holds ``\hat{H}`` in `G.H` and ``\hat{μ}_
 ## Contents
 
 ```@contents
-Pages = ["background.md", "api.md", "references.md"]
+Pages = ["howto.md", "background.md", "api.md", "references.md"]
 Depth = 2
 ```
 
