@@ -46,7 +46,7 @@ With [QuantumControl](@extref QuantumControl :doc:`index`), `adjoint(traj)` of a
 Build the gradient generator from the adjoint generator. Its control derivative is ``\hat{μ}^\dagger = \hat{H}_1^\dagger``:
 
 ```@example backward
-G̃ = GradGenerator(H_adj)
+G = GradGenerator(H_adj)
 nothing # hide
 ```
 
@@ -54,7 +54,7 @@ Initialize a backward propagator for a gradient vector that holds the boundary c
 
 ```@example backward
 χ_T = ComplexF64[0, 0, 1]
-propagator = init_prop(GradVector(χ_T, 1), G̃, tlist; method = ExpProp, backward = true)
+propagator = init_prop(GradVector(χ_T, 1), G, tlist; method = ExpProp, backward = true)
 nothing # hide
 ```
 
@@ -73,7 +73,7 @@ for n = N_T:-1:1
 end
 ```
 
-This is how GRAPE evaluates its gradient with `gradient_method = :gradgen`. Without the call to `resetgradvec!`, the gradient state instead accumulates the derivative with respect to a parameter that all time steps depend on, see [Non-zero gradient states and multiple time steps](@ref Background-Exponential).
+This is how GRAPE evaluates its gradient with `gradient_method = :gradgen`. Without the call to `resetgradvec!`, the gradient state instead accumulates the derivative with respect to a parameter that all time steps depend on, see [Non-zero gradient states and multiple time steps](@ref Background-cor-gradient-state).
 
 To check the result, compare with a finite-difference derivative of a single backward step, ``e^{-\ii \hat{H}^\dagger(ϵ_n) (-dt)}``, applied to ``|χ(t_{n+1})⟩``:
 
@@ -89,12 +89,12 @@ norm(dχ[n] - dχ_fd)
 
 !!! warning "Not the adjoint of the gradient generator"
 
-    The gradient generator for the backward propagation is ``G[\hat{H}^\dagger]``, with ``\hat{μ}^\dagger`` in its upper right block. This is not the adjoint ``G[\hat{H}]^\dagger`` of the forward gradient generator, which is block *lower*-triangular. Propagating ``(0, |χ⟩)`` under ``G[\hat{H}]^\dagger`` leaves the gradient state at zero. For this reason, `QuantumGradientGenerators` does not define `adjoint` for a gradient generator. See [Properties of the gradient generator](@ref Background-Properties) for details.
+    The gradient generator for the backward propagation is ``G[\hat{H}^\dagger]``, with ``\hat{μ}^\dagger`` in its upper right block. This is not the adjoint ``G[\hat{H}]^\dagger`` of the forward gradient generator, which is block *lower*-triangular. Propagating ``(0, |χ⟩)`` under ``G[\hat{H}]^\dagger`` leaves the gradient state at zero. For this reason, `QuantumGradientGenerators` does not define `adjoint` for a gradient generator. See [Adjoint](@ref Background-Adjoint) on the Background page for details.
 
 
 ## [How to propagate gradient vectors with the Chebychev propagator](@id Howto-Cheby)
 
-The [Chebychev propagator](@extref QuantumPropagators :label:`method_cheby`) works for gradient vectors without any extra configuration. The gradient states it produces are the exact derivative of the Chebychev propagation of the state, even when that propagation is inaccurate: a polynomial in the gradient generator with coefficients that do not depend on the control maps a gradient vector to the derivative of the same polynomial applied to the state ([Corollary 7](@ref Background-Numerical-Methods)). This guide shows how to propagate a gradient vector and how to verify the gradient against finite differences.
+The [Chebychev propagator](@extref QuantumPropagators :label:`method_cheby`) works for gradient vectors without any extra configuration. The gradient states it produces are the exact derivative of the Chebychev propagation of the state, even when that propagation is inaccurate: a polynomial in the gradient generator with coefficients that do not depend on the control maps a gradient vector to the derivative of the same polynomial applied to the state ([Corollary 7](@ref Background-cor-polynomial)). This guide shows how to propagate a gradient vector and how to verify the gradient against finite differences.
 
 Define a Hermitian generator. Here, the parameter ``u`` with respect to which we take the derivative is a static offset of the control, ``ϵ(t) + u``, so that ``\partial \hat{H} / \partial u = \hat{H}_1``:
 
@@ -122,7 +122,7 @@ Propagate a gradient vector with `method = Cheby`:
 nothing # hide
 ```
 
-The gradient generator has the same eigenvalues as ``\hat{H}``, each with multiplicity ``L+1`` ([Proposition 8](@ref Background-Properties)), so the propagator obtains its spectral range from ``\hat{H}``. It uses the same Chebychev coefficients as a propagation of the state alone, so the state component is identical:
+The gradient generator has the same eigenvalues as ``\hat{H}``, each with multiplicity ``L+1`` ([Proposition 8](@ref Background-prop-charpoly)), so the propagator obtains its spectral range from ``\hat{H}``. It uses the same Chebychev coefficients as a propagation of the state alone, so the state component is identical:
 
 ```@example cheby
 Ψ.state == propagate(Ψ₀, H(0.0), tlist; method = Cheby)
@@ -130,7 +130,7 @@ The gradient generator has the same eigenvalues as ``\hat{H}``, each with multip
 
 The gradient vector is propagated without resetting the gradient state, so `Ψ.grad_states[1]` is the derivative ``\partial_u |Ψ(T)⟩`` of the final state with respect to the offset ``u``.
 
-Do not pass `check_normalization = true` when propagating a gradient vector. That check compares Rayleigh quotients with the spectral range, and those of a gradient generator can lie outside the spectral range of ``\hat{H}`` ([Non-normality](@ref Background-Properties)), so the check fails even when the spectral range is correct.
+Do not pass `check_normalization = true` when propagating a gradient vector. That check compares expectation values ``⟨v|G|v⟩`` with the spectral range, and for a gradient generator, these can lie outside the spectral range of ``\hat{H}`` ([Non-normality](@ref Background-Non-Normality)), so the check fails even when the spectral range is correct.
 
 To verify the gradient with finite differences, the Chebychev propagations for ``u`` and ``u \pm h`` must use the same coefficients. By default, the spectral range, and thus the coefficients, are determined from the generator, and so they change with ``u``. Fix the spectral range with `specrange_method = :manual` and `E_min`, `E_max` (a range that contains the spectrum of ``\hat{H}`` for all values of ``u`` and of the control). To demonstrate that the gradient is the derivative of the Chebychev propagation even when the propagation is inaccurate, also truncate the Chebychev series early with `cheby_coeffs_limit = 1e-2`:
 

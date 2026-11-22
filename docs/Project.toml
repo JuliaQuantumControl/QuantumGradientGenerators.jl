@@ -16,7 +16,7 @@ QuantumGradientGenerators = {path = ".."}
 
 [compat]
 DiffEqBase = "6, 7"
-Documenter = "1.4"
+Documenter = "1.18"
 DocumenterCitations = "1.5"
 DocumenterInterLinks = "1.1"
 LinearAlgebra = "1"

@@ -96,13 +96,15 @@ From here on, we consider a single control ``ϵ``, with ``G = \left(\begin{small
 
 Let ``\hat{H}(ϵ)`` be constant in time and continuously differentiable in the real control value ``ϵ``, with ``\hat{μ} = \partial \hat{H} / \partial ϵ``. We write ``\hat{U}(t) = e^{-\ii \hat{H}(ϵ) t}``, leaving the dependence on ``ϵ`` implicit, and ``\partial_ϵ \hat{U} \equiv \partial \hat{U} / \partial ϵ``. Note that ``\hat{H}`` and ``\hat{μ}`` generally do not commute.
 
-**Proposition 1.** For every real ``t``,
+!!! proposition "Proposition 1"
 
-```math
-\begin{equation}\label{eq:gradgen-exp}
-e^{-\ii G t} = \begin{pmatrix} \hat{U}(t) & \partial_ϵ \hat{U}(t) \\ 0 & \hat{U}(t) \end{pmatrix}\,.
-\end{equation}
-```
+    [](@id Background-prop-gradgen-exp)For every real ``t``,
+
+    ```math
+    \begin{equation}\label{eq:gradgen-exp}
+    e^{-\ii G t} = \begin{pmatrix} \hat{U}(t) & \partial_ϵ \hat{U}(t) \\ 0 & \hat{U}(t) \end{pmatrix}\,.
+    \end{equation}
+    ```
 
 In particular, for ``t = dt``, ``e^{-\ii G dt} (0, |Ψ⟩) = (\partial_ϵ \hat{U} |Ψ⟩, \hat{U} |Ψ⟩)``, which together with the [reduction to a single control](@ref Background-Reduction) proves Eq. \eqref{eq:main}.
 
@@ -155,14 +157,16 @@ which for ``t = dt`` is the [expansion used by `GRAPE.jl` with `gradient_method=
 
 Applying the block form of ``e^{-\ii G t}``, Eq. \eqref{eq:gradgen-exp}, to a gradient vector with an arbitrary gradient state gives the following result.
 
-**Corollary 2.** For any ``|Ψ^\prime⟩`` and ``|Ψ⟩``,
+!!! corollary "Corollary 2"
 
-```math
-\begin{equation}\label{eq:chain}
-e^{-\ii G dt} \begin{pmatrix} |Ψ^\prime⟩ \\ |Ψ⟩ \end{pmatrix}
-= \begin{pmatrix} \hat{U} |Ψ^\prime⟩ + \partial_ϵ \hat{U} |Ψ⟩ \\ \hat{U} |Ψ⟩ \end{pmatrix}\,.
-\end{equation}
-```
+    [](@id Background-cor-gradient-state)For any ``|Ψ^\prime⟩`` and ``|Ψ⟩``,
+
+    ```math
+    \begin{equation}\label{eq:chain}
+    e^{-\ii G dt} \begin{pmatrix} |Ψ^\prime⟩ \\ |Ψ⟩ \end{pmatrix}
+    = \begin{pmatrix} \hat{U} |Ψ^\prime⟩ + \partial_ϵ \hat{U} |Ψ⟩ \\ \hat{U} |Ψ⟩ \end{pmatrix}\,.
+    \end{equation}
+    ```
 
 If the state ``|Ψ⟩ = |Ψ(ϵ)⟩`` itself depends on ``ϵ`` and ``|Ψ^\prime⟩ = \partial_ϵ |Ψ⟩``, the upper component is ``\partial_ϵ (\hat{U} |Ψ⟩)``, by the product rule. That is, a gradient vector of the form ``(\partial_ϵ |Ψ⟩, |Ψ⟩)`` is propagated to a gradient vector of the same form.
 
@@ -191,7 +195,7 @@ one time step at a time. GRAPE is the opposite case: each control value ``ϵ_{nl
 
 ## [Dual numbers and forward-mode differentiation](@id Background-Dual)
 
-The block form of ``e^{-\ii G t}``, with ``\hat{U}`` on the diagonal and ``\partial_ϵ \hat{U}`` in the upper right block (Proposition 1), has a second interpretation: the gradient vector is the state together with its "dual part", and propagation under the gradient generator is forward-mode automatic differentiation [GriewankWalther2008](@cite). This section makes this statement precise, which yields an independent proof of that block form and, more importantly, a statement about the numerical methods that are used in practice to propagate gradient vectors.
+The block form of ``e^{-\ii G t}``, with ``\hat{U}`` on the diagonal and ``\partial_ϵ \hat{U}`` in the upper right block ([Proposition 1](@ref Background-prop-gradgen-exp)), has a second interpretation: the gradient vector is the state together with its "dual part", and propagation under the gradient generator is forward-mode automatic differentiation [GriewankWalther2008](@cite). This section makes this statement precise, which yields an independent proof of that block form and, more importantly, a statement about the numerical methods that are used in practice to propagate gradient vectors.
 
 ### Dual numbers
 
@@ -238,19 +242,21 @@ To compare dual operators and dual vectors with gradient generators and gradient
 
 Applied to a scalar dual number instead of an operator, Eq. \eqref{eq:iota} gives ``ι(a + bη) = \left(\begin{smallmatrix} a & b \\ 0 & a \end{smallmatrix}\right)``, the standard [matrix representation of dual numbers](https://en.wikipedia.org/wiki/Dual_number#Matrix_representation). In particular, ``ι(η) = \left(\begin{smallmatrix} 0 & 1 \\ 0 & 0 \end{smallmatrix}\right)`` squares to zero, like ``η``.
 
-**Proposition 3.** The map ``ι`` is linear and injective, and for all dual operators ``X``, ``Y`` and dual vectors ``v``,
+!!! proposition "Proposition 3"
 
-```math
-\begin{equation}\label{eq:iota-homomorphism}
-ι(X Y) = ι(X) ι(Y)\,,
-\qquad
-ι(X v) = ι(X) ι(v)\,,
-\qquad
-ι(\mathbb{1}) = \mathbb{1}\,.
-\end{equation}
-```
+    [](@id Background-prop-iota)The map ``ι`` is linear and injective, and for all dual operators ``X``, ``Y`` and dual vectors ``v``,
 
-If ``X = \hat{A} + η \hat{B}`` with an invertible ``\hat{A}``, then ``X^{-1} = \hat{A}^{-1} - η \hat{A}^{-1} \hat{B} \hat{A}^{-1}`` and ``ι(X^{-1}) = ι(X)^{-1}``.
+    ```math
+    \begin{equation}\label{eq:iota-homomorphism}
+    ι(X Y) = ι(X) ι(Y)\,,
+    \qquad
+    ι(X v) = ι(X) ι(v)\,,
+    \qquad
+    ι(\mathbb{1}) = \mathbb{1}\,.
+    \end{equation}
+    ```
+
+    If ``X = \hat{A} + η \hat{B}`` with an invertible ``\hat{A}``, then ``X^{-1} = \hat{A}^{-1} - η \hat{A}^{-1} \hat{B} \hat{A}^{-1}`` and ``ι(X^{-1}) = ι(X)^{-1}``.
 
 *Proof.* Linearity and injectivity are evident from Eq. \eqref{eq:iota}. Block multiplication gives
 
@@ -280,15 +286,17 @@ For a generator ``\hat{H}(ϵ)`` that is differentiable in the real control ``ϵ`
 
 For a linear control, or any polynomial dependence on ``ϵ``, this is simply the evaluation of the expression for ``\hat{H}`` in dual arithmetic. Comparing ``\hat{H} + η \hat{μ}`` with the block representation ``ι`` in Eq. \eqref{eq:iota} gives the following identification.
 
-**Proposition 4.** The gradient generator is the image of the dynamical generator evaluated at the dual control value, and the gradient vector is the image of a dual state:
+!!! proposition "Proposition 4"
 
-```math
-\begin{equation}\label{eq:gradgen-dual}
-G[\hat{H}] = ι\big(\hat{H}(ϵ + η)\big)\,,
-\qquad
-Ψ = \begin{pmatrix} |Ψ^\prime⟩ \\ |Ψ⟩ \end{pmatrix} = ι\big(|Ψ⟩ + η |Ψ^\prime⟩\big)\,.
-\end{equation}
-```
+    [](@id Background-prop-gradgen-dual)The gradient generator is the image of the dynamical generator evaluated at the dual control value, and the gradient vector is the image of a dual state:
+
+    ```math
+    \begin{equation}\label{eq:gradgen-dual}
+    G[\hat{H}] = ι\big(\hat{H}(ϵ + η)\big)\,,
+    \qquad
+    Ψ = \begin{pmatrix} |Ψ^\prime⟩ \\ |Ψ⟩ \end{pmatrix} = ι\big(|Ψ⟩ + η |Ψ^\prime⟩\big)\,.
+    \end{equation}
+    ```
 
 A gradient vector with a zero gradient state is the image of a state that does not depend on ``ϵ``. For ``L`` controls, ``G[\hat{H}]`` and ``(|Ψ^\prime_1⟩, \dots, |Ψ^\prime_L⟩, |Ψ⟩)`` are the images of ``\hat{H} + \sum_l η_l \hat{μ}_l`` and ``|Ψ⟩ + \sum_l η_l |Ψ^\prime_l⟩`` in the same way, with ``L`` dual units satisfying ``η_l η_{l^\prime} = 0``. This is the dual-number form of the [reduction to a single control](@ref Background-Reduction). For the backward propagation, ``(\hat{A} + η \hat{B})^\dagger = \hat{A}^\dagger + η \hat{B}^\dagger``, so ``G[\hat{H}^\dagger] = ι(\hat{H}^\dagger(ϵ + η))``.
 
@@ -302,20 +310,22 @@ Df(\hat{A})[\hat{B}] \equiv \frac{d}{ds} f(\hat{A} + s \hat{B}) \Big\vert_{s=0}\
 \end{equation}
 ```
 
-**Theorem 5.** Let ``f(z) = \sum_{m=0}^{\infty} c_m z^m`` be a power series with complex coefficients and radius of convergence ``R``, and let ``\hat{A}`` and ``\hat{B}`` be complex ``N \times N`` matrices with ``\Vert \hat{A} \Vert < R`` in a submultiplicative norm. Then
+!!! theorem "Theorem 5"
 
-```math
-\begin{equation}\label{eq:analytic}
-\begin{split}
-f(\hat{A} + η \hat{B}) &= f(\hat{A}) + η Df(\hat{A})[\hat{B}]\,, \\
-Df(\hat{A})[\hat{B}] &= \sum_{m=1}^{\infty} c_m \sum_{k=0}^{m-1} \hat{A}^k \hat{B} \hat{A}^{m-1-k}\,.
-\end{split}
-\end{equation}
-```
+    [](@id Background-theorem-dual-functions)Let ``f(z) = \sum_{m=0}^{\infty} c_m z^m`` be a power series with complex coefficients and radius of convergence ``R``, and let ``\hat{A}`` and ``\hat{B}`` be complex ``N \times N`` matrices with ``\Vert \hat{A} \Vert < R`` in a submultiplicative norm. Then
+
+    ```math
+    \begin{equation}\label{eq:analytic}
+    \begin{split}
+    f(\hat{A} + η \hat{B}) &= f(\hat{A}) + η Df(\hat{A})[\hat{B}]\,, \\
+    Df(\hat{A})[\hat{B}] &= \sum_{m=1}^{\infty} c_m \sum_{k=0}^{m-1} \hat{A}^k \hat{B} \hat{A}^{m-1-k}\,.
+    \end{split}
+    \end{equation}
+    ```
 
 *Proof.* Let ``D_m = \sum_{k=0}^{m-1} \hat{A}^k \hat{B} \hat{A}^{m-1-k}``. By induction with Eq. \eqref{eq:dual-op-mult}, ``(\hat{A} + η \hat{B})^m = \hat{A}^m + η D_m``, since ``(\hat{A}^m + η D_m)(\hat{A} + η \hat{B}) = \hat{A}^{m+1} + η (\hat{A}^m \hat{B} + D_m \hat{A})``. Only ``η^2 = 0`` and the fact that ``η`` commutes with everything enter; the order of ``\hat{A}`` and ``\hat{B}`` is preserved. Expanding ``(\hat{A} + s \hat{B})^m`` into ordered products, the terms of first order in ``s`` are exactly those of ``s D_m``. As ``\Vert D_m \Vert \le m \Vert \hat{A} \Vert^{m-1} \Vert \hat{B} \Vert``, all series converge absolutely for small ``|s|``, and may be rearranged into ``f(\hat{A} + s \hat{B}) = f(\hat{A}) + s \sum_m c_m D_m + \mathcal{O}(s^2)``. ``\square``
 
-For the exponential, ``R = \infty``. With ``f(z) = e^{-\ii z dt}``, ``\hat{A} = \hat{H}``, and ``\hat{B} = \hat{μ}``, the dual part in Eq. \eqref{eq:analytic} is the Taylor series \eqref{eq:taylor} for ``t = dt``, and it is the derivative of ``e^{-\ii \hat{H}(ϵ) dt}`` with respect to ``ϵ`` by the chain rule. Since ``ι`` preserves products and convergent series (Proposition 3), and ``G = ι(\hat{H}(ϵ + η))`` (Proposition 4),
+For the exponential, ``R = \infty``. With ``f(z) = e^{-\ii z dt}``, ``\hat{A} = \hat{H}``, and ``\hat{B} = \hat{μ}``, the dual part in Eq. \eqref{eq:analytic} is the Taylor series \eqref{eq:taylor} for ``t = dt``, and it is the derivative of ``e^{-\ii \hat{H}(ϵ) dt}`` with respect to ``ϵ`` by the chain rule. Since ``ι`` preserves products and convergent series ([Proposition 3](@ref Background-prop-iota)), and ``G = ι(\hat{H}(ϵ + η))`` ([Proposition 4](@ref Background-prop-gradgen-dual)),
 
 ```math
 \begin{equation}\label{eq:expG-dual}
@@ -329,84 +339,108 @@ which is an independent proof of the block form of ``e^{-\ii G dt}`` in Eq. \eq
 
 The dual-number picture extends beyond the exact exponential, to the numerical methods that are actually used to propagate gradient vectors.
 
-**Proposition 6.** Consider a finite computation that produces a vector or an operator from one or more generators ``\hat{H}(t_i; ϵ)``, a state ``|Ψ(ϵ)⟩``, and any number of ``ϵ``-independent operators and vectors, using only linear combinations with ``ϵ``-independent coefficients, products of operators, application of operators to vectors, and the solution of linear systems. Run the same computation with each ``\hat{H}(t_i)`` replaced by ``G[\hat{H}(t_i)]``, ``|Ψ⟩`` by ``(\partial_ϵ |Ψ⟩, |Ψ⟩)``, every ``ϵ``-independent operator ``\hat{O}`` by ``\mathrm{diag}(\hat{O}, \hat{O})``, and every ``ϵ``-independent vector ``|Φ⟩`` by ``(0, |Φ⟩)``. Then, in exact arithmetic, a resulting vector ``|Φ(ϵ)⟩`` is replaced by ``(\partial_ϵ |Φ⟩, |Φ⟩)``, and a resulting operator ``\hat{X}(ϵ)`` by ``\left(\begin{smallmatrix} \hat{X} & \partial_ϵ \hat{X} \\ 0 & \hat{X} \end{smallmatrix}\right)``.
+!!! proposition "Proposition 6"
 
-*Proof.* By the identification of gradient generators and gradient vectors with dual objects (Proposition 4), the replacements are ``ι`` of the inputs evaluated at ``ϵ + η``, each of the form "value ``+ η`` derivative". Since ``ι`` preserves sums, products, and inverses (Proposition 3), running the computation on the block objects is the same as running it in dual arithmetic. Each allowed operation preserves the form "value ``+ η`` derivative": linear combinations because ``\partial_ϵ`` is linear, products because Eq. \eqref{eq:dual-op-mult} is the product rule, and inverses because the dual part of ``X^{-1} = \hat{A}^{-1} - η \hat{A}^{-1} \hat{B} \hat{A}^{-1}`` is ``\partial_ϵ (X^{-1})``. ``\square``
+    [](@id Background-prop-linear-algebra)Consider a finite computation that produces a vector or an operator from one or more generators ``\hat{H}(t_i; ϵ)``, a state ``|Ψ(ϵ)⟩``, and any number of ``ϵ``-independent operators and vectors, using only linear combinations with ``ϵ``-independent coefficients, products of operators, application of operators to vectors, and the solution of linear systems. Run the same computation with each ``\hat{H}(t_i)`` replaced by ``G[\hat{H}(t_i)]``, ``|Ψ⟩`` by ``(\partial_ϵ |Ψ⟩, |Ψ⟩)``, every ``ϵ``-independent operator ``\hat{O}`` by ``\mathrm{diag}(\hat{O}, \hat{O})``, and every ``ϵ``-independent vector ``|Φ⟩`` by ``(0, |Φ⟩)``. Then, in exact arithmetic, a resulting vector ``|Φ(ϵ)⟩`` is replaced by ``(\partial_ϵ |Φ⟩, |Φ⟩)``, and a resulting operator ``\hat{X}(ϵ)`` by ``\left(\begin{smallmatrix} \hat{X} & \partial_ϵ \hat{X} \\ 0 & \hat{X} \end{smallmatrix}\right)``.
 
-Proposition 6 allows only linear combinations with ``ϵ``-independent coefficients, products of operators, applications of operators to vectors, and solutions of linear systems. Two kinds of operations fall outside of it. First, operations that are not complex-linear in the state, such as inner products and norms (e.g., in an orthogonalization or an error estimate), act on the gradient vector as a whole, not as dual arithmetic would. Second, choices that a method makes based on the data, such as the number of terms of an expansion, a spectral range, or an adaptive time step, are made for ``G`` rather than for ``\hat{H}``. If such choices are fixed before the computation, the remaining computation is linear algebra of the allowed kind, and its result is the exact derivative for these fixed choices. The [flat, frozen, and dual semantics](@ref Background-Semantics) below distinguish how a method can treat inner products, norms, and data-dependent choices.
+*Proof.* By the identification of gradient generators and gradient vectors with dual objects ([Proposition 4](@ref Background-prop-gradgen-dual)), the replacements are ``ι`` of the inputs evaluated at ``ϵ + η``, each of the form "value ``+ η`` derivative". Since ``ι`` preserves sums, products, and inverses ([Proposition 3](@ref Background-prop-iota)), running the computation on the block objects is the same as running it in dual arithmetic. Each allowed operation preserves the form "value ``+ η`` derivative": linear combinations because ``\partial_ϵ`` is linear, products because Eq. \eqref{eq:dual-op-mult} is the product rule, and inverses because the dual part of ``X^{-1} = \hat{A}^{-1} - η \hat{A}^{-1} \hat{B} \hat{A}^{-1}`` is ``\partial_ϵ (X^{-1})``. ``\square``
 
-Most propagation methods for a piecewise-constant generator approximate ``\hat{U} = e^{-\ii \hat{H} dt}`` by a polynomial in ``\hat{H}``. Evaluating a polynomial requires only linear combinations and products of ``\hat{H}``, which are operations allowed in Proposition 6. This gives a strong statement.
+[Proposition 6](@ref Background-prop-linear-algebra) allows only linear combinations with ``ϵ``-independent coefficients, products of operators, applications of operators to vectors, and solutions of linear systems. Two kinds of operations fall outside of it. First, operations that are not complex-linear in the state, such as inner products and norms (e.g., in an orthogonalization or an error estimate), act on the gradient vector as a whole, not as dual arithmetic would. Second, choices that a method makes based on the data, such as the number of terms of an expansion, a spectral range, or an adaptive time step, are made for ``G`` rather than for ``\hat{H}``. If such choices are fixed before the computation, the remaining computation is linear algebra of the allowed kind, and its result is the exact derivative for these fixed choices. The [flat, frozen, and dual semantics](@ref Background-Semantics) below distinguish how a method can treat inner products, norms, and data-dependent choices.
 
-**Corollary 7.** Let ``p(z) = \sum_{k=0}^{K} c_k z^k`` be a polynomial whose coefficients do not depend on ``ϵ``. Then ``p(G)`` maps ``(\partial_ϵ |Ψ⟩, |Ψ⟩)`` to ``(\partial_ϵ [p(\hat{H}(ϵ)) |Ψ⟩], p(\hat{H}(ϵ)) |Ψ⟩)``.
+Most propagation methods for a piecewise-constant generator approximate ``\hat{U} = e^{-\ii \hat{H} dt}`` by a polynomial in ``\hat{H}``. Evaluating a polynomial requires only linear combinations and products of ``\hat{H}``, which are operations allowed in [Proposition 6](@ref Background-prop-linear-algebra). This gives a strong statement.
+
+!!! corollary "Corollary 7"
+
+    [](@id Background-cor-polynomial)Let ``p(z) = \sum_{k=0}^{K} c_k z^k`` be a polynomial whose coefficients do not depend on ``ϵ``. Then ``p(G)`` maps ``(\partial_ϵ |Ψ⟩, |Ψ⟩)`` to ``(\partial_ϵ [p(\hat{H}(ϵ)) |Ψ⟩], p(\hat{H}(ϵ)) |Ψ⟩)``.
 
 The gradient state is thus the exact derivative of the *approximate* propagated state, not an approximation of the derivative of the exact propagated state. The error of the propagation enters the state and the gradient consistently: up to floating-point rounding, the gradient is the derivative of the function of ``ϵ`` that the propagation actually evaluates, no matter how few terms the polynomial has. How well it approximates ``\partial_ϵ \hat{U} |Ψ⟩`` depends on how well ``p^\prime`` approximates the derivative of ``z \mapsto e^{-\ii z dt}`` on the spectrum of ``\hat{H}``.
 
-The [Chebychev propagator](@extref QuantumPropagators :label:`method_cheby`) in `QuantumPropagators` [Tal-EzerJCP1984](@cite) is of this form. It shifts and scales ``\hat{H}`` with a spectral range ``[E_{\min}, E_{\min} + Δ]``, sums Chebychev polynomials with Bessel-function coefficients that depend only on ``Δ dt``, and multiplies with a phase factor. The spectral range is determined when the propagator is initialized, from the minimum and maximum values of the controls, and it does not change with the control values in a particular time step. Thus, the polynomial of each time step has ``ϵ``-independent coefficients, and the gradient state after each time step is the exact derivative of the Chebychev approximation (Corollary 7). For a gradient generator, the spectral range of ``G`` is that of ``\hat{H}`` ([Proposition 8](@ref Background-Properties)), and `specrange` computes it from ``\hat{H}``, so the same Chebychev coefficients apply.
+The [Chebychev propagator](@extref QuantumPropagators :label:`method_cheby`) in `QuantumPropagators` [Tal-EzerJCP1984](@cite) is of this form. It shifts and scales ``\hat{H}`` with a spectral range ``[E_{\min}, E_{\min} + Δ]``, sums Chebychev polynomials with Bessel-function coefficients that depend only on ``Δ dt``, and multiplies with a phase factor. The spectral range is determined when the propagator is initialized, from the minimum and maximum values of the controls, and it does not change with the control values in a particular time step. Thus, the polynomial of each time step has ``ϵ``-independent coefficients, and the gradient state after each time step is the exact derivative of the Chebychev approximation ([Corollary 7](@ref Background-cor-polynomial)). For a gradient generator, the spectral range of ``G`` is that of ``\hat{H}`` ([Proposition 8](@ref Background-prop-charpoly)), and `specrange` computes it from ``\hat{H}``, so the same Chebychev coefficients apply.
 
 This exactness does not hold for methods whose polynomial depends on the propagated vector. The [Newton propagator](@extref QuantumPropagators :label:`method_newton`) [BermanJPA1992, AshkenaziJCP1995](@cite) builds a Krylov subspace with an Arnoldi iteration [ArnoldiQAM1951](@cite), which uses inner products of the full gradient vector, and chooses its interpolation points from the resulting Ritz values. The propagation of ``Ψ`` under ``G`` is then not the derivative of the Newton propagation of ``|Ψ⟩`` under ``\hat{H}``. Instead, it is an approximation of ``e^{-\ii G dt} Ψ`` that converges together with the propagation, so the gradient states are accurate to the precision of the propagation. The same holds for Krylov methods in general.
 
 ### [Flat, frozen, and dual semantics](@id Background-Semantics)
 
-Operations beyond linear combinations of vectors and operators with ``ϵ``-independent coefficients, products of operators, applications of operators to vectors, and solutions of linear systems (Proposition 6), such as inner products, norms, and the choices that a method makes based on the data (a spectral range, interpolation points, the number of terms, or a time step), determine the interpretation and role of the gradient states in a numerical propagation. A propagation method that is applied to a gradient vector can treat these operations in three ways.
+Operations beyond linear combinations of vectors and operators with ``ϵ``-independent coefficients, products of operators, applications of operators to vectors, and solutions of linear systems ([Proposition 6](@ref Background-prop-linear-algebra)), such as inner products, norms, and the choices that a method makes based on the data (a spectral range, interpolation points, the number of terms, or a time step), determine the interpretation and role of the gradient states in a numerical propagation. A propagation method that is applied to a gradient vector can treat these operations in three ways.
 
 In the *flat* semantics, ``G`` and ``Ψ`` are an ordinary matrix and vector of dimension ``N(L+1)``. Inner products and norms include the gradient states, and every choice that depends on the data is made for ``G`` and ``Ψ`` as a whole. The state component of the result then differs from the propagation of ``|Ψ⟩`` under ``\hat{H}`` alone within the precision of the propagation, and the gradient states approximate the exact derivative ``\partial_ϵ |Ψ(T)⟩`` of the propagated state to that same precision. The gradient converges together with the propagation.
 
-In the *frozen* semantics, every quantity that a method derives from the data, such as a spectral range, interpolation points, expansion coefficients, the number of terms, or a time step, is computed from ``\hat{H}`` and the state ``|Ψ⟩`` alone, exactly as in the propagation of ``|Ψ⟩`` without gradients, and then held fixed. The state component of the result is then the same as the propagation of ``|Ψ⟩`` under ``\hat{H}`` (up to floating-point rounding). With the frozen quantities, the remaining computation consists only of linear combinations, products, and linear solves with ``ϵ``-independent coefficients, so by Proposition 6, the gradient states are the exact derivative of the computed state, except for the dependence of the frozen quantities on ``ϵ``. The computed state depends on these quantities only through the error of the propagation, so the missing contribution is of the order of that error. For ODE solvers, this approach is known as internal numerical differentiation [BockMOCRS1981](@cite).
+In the *frozen* semantics, every quantity that a method derives from the data, such as a spectral range, interpolation points, expansion coefficients, the number of terms, or a time step, is computed from ``\hat{H}`` and the state ``|Ψ⟩`` alone, exactly as in the propagation of ``|Ψ⟩`` without gradients, and then held fixed. The state component of the result is then the same as the propagation of ``|Ψ⟩`` under ``\hat{H}`` (up to floating-point rounding). With the frozen quantities, the remaining computation consists only of linear combinations, products, and linear solves with ``ϵ``-independent coefficients, so by [Proposition 6](@ref Background-prop-linear-algebra), the gradient states are the exact derivative of the computed state, except for the dependence of the frozen quantities on ``ϵ``. The computed state depends on these quantities only through the error of the propagation, so the missing contribution is of the order of that error. For ODE solvers, this approach is known as internal numerical differentiation [BockMOCRS1981; Sec. 8.3.3](@cite).
 
 In the *full dual* semantics, the quantities that a method derives from the data are themselves dual numbers, computed in dual arithmetic. For example, the inner product of two dual vectors is ``⟨Ψ|Φ⟩ + η (⟨Ψ^\prime|Φ⟩ + ⟨Ψ|Φ^\prime⟩)``. Thus, their dependence on ``ϵ`` is differentiated as well, and only discrete decisions, such as the number of terms or the acceptance of a time step, remain frozen. The gradient states are then the exact derivative of the computed state, wherever the discrete decisions do not change. This is forward-mode automatic differentiation with a dual-number type like that of [ForwardDiff](https://github.com/JuliaDiff/ForwardDiff.jl). Gradient vectors cannot represent it, since an inner product of gradient vectors is an ordinary complex number; it requires dual numbers as the scalar type throughout the propagation method. Whether the error control of an adaptive method is itself frozen is a choice of the method: [DifferentialEquations](https://github.com/SciML/DifferentialEquations.jl), e.g., includes the dual parts of ForwardDiff dual numbers in its default error norm, as in the flat semantics.
 
-The three semantics coincide for methods that make no choices based on the data, or whose choices do not depend on ``ϵ``: the exact exponential (Proposition 1), polynomial propagators with fixed coefficients (Corollary 7), and ODE solvers with a fixed time grid (Proposition 12). They differ for Krylov methods and for adaptive time steps. The propagation methods in `QuantumPropagators` behave as follows when propagating a gradient vector:
+The three semantics coincide for methods that make no choices based on the data, or whose choices do not depend on ``ϵ``: the exact exponential ([Proposition 1](@ref Background-prop-gradgen-exp)), polynomial propagators with fixed coefficients ([Corollary 7](@ref Background-cor-polynomial)), and ODE solvers with a fixed time grid ([Proposition 12](@ref Background-prop-ode-solvers)). They differ for Krylov methods and for adaptive time steps. The propagation methods in `QuantumPropagators` behave as follows when propagating a gradient vector:
 
 | Method                                                              | Choices based on the data                                                         | Semantics                 |
 |:------------------------------------------------------------------- |:--------------------------------------------------------------------------------- |:------------------------- |
 | `ExpProp`                                                           | none                                                                              | exact (all coincide)      |
-| [Chebychev](@extref QuantumPropagators :label:`method_cheby`)       | spectral range of ``\hat{H}`` (Proposition 8), fixed at initialization            | all coincide              |
+| [Chebychev](@extref QuantumPropagators :label:`method_cheby`)       | spectral range of ``\hat{H}`` ([Proposition 8](@ref Background-prop-charpoly)), fixed at initialization            | all coincide              |
 | [Newton](@extref QuantumPropagators :label:`method_newton`)         | Krylov subspace and interpolation points, from the full gradient vector           | flat                      |
 | ODE solvers with adaptive time steps                                | time steps, from an error norm of the full gradient vector (by default)           | flat                      |
 
 
 ### Relation to automatic differentiation
 
-A gradient vector ``(|Ψ^\prime⟩, |Ψ⟩)`` is the faithful matrix representation of the dual state ``|Ψ⟩ + η |Ψ^\prime⟩``, and the gradient generator is the representation of the dynamical generator at the dual control value ``ϵ + η`` (Propositions 3 and 4). Propagating a gradient vector under a gradient generator is forward-mode automatic differentiation of the propagation with respect to ``ϵ``. For the exact propagator, this gives ``(\partial_ϵ (\hat{U} |Ψ⟩), \hat{U} |Ψ⟩)``. For a numerical method built from linear algebra with ``ϵ``-independent coefficients, such as a Chebychev propagator, it gives the exact derivative of the approximate result. For methods whose internal choices depend on the propagated vector, such as Krylov methods, a gradient vector follows the flat semantics, and the gradient is an approximation of the exact derivative that converges together with the propagation.
+A gradient vector ``(|Ψ^\prime⟩, |Ψ⟩)`` is the faithful matrix representation of the dual state ``|Ψ⟩ + η |Ψ^\prime⟩``, and the gradient generator is the representation of the dynamical generator at the dual control value ``ϵ + η`` (Propositions [3](@ref Background-prop-iota) and [4](@ref Background-prop-gradgen-dual)). Propagating a gradient vector under a gradient generator is forward-mode automatic differentiation of the propagation with respect to ``ϵ``. For the exact propagator, this gives ``(\partial_ϵ (\hat{U} |Ψ⟩), \hat{U} |Ψ⟩)``. For a numerical method built from linear algebra with ``ϵ``-independent coefficients, such as a Chebychev propagator, it gives the exact derivative of the approximate result. For methods whose internal choices depend on the propagated vector, such as Krylov methods, a gradient vector follows the flat semantics, and the gradient is an approximation of the exact derivative that converges together with the propagation.
 
 GRAPE combines this forward mode with the reverse mode. The gradient with respect to all ``ϵ_{nl}`` is obtained from one forward propagation of ``|Ψ⟩`` and one backward propagation of ``|χ⟩``, independent of the number ``N_T`` of time steps. That backward propagation is reverse-mode (adjoint) differentiation across the time steps. Within each time step, the gradient generator ``G[\hat{H}_n^\dagger]`` provides the derivative of the single-step propagator in forward mode, for all ``L`` controls at once, with the gradient states reset before each step [GoerzQ2022](@cite).
 
 
 ## [Properties of the gradient generator](@id Background-Properties)
 
-Propagation methods use more than the product of the generator with a vector. They estimate spectral ranges, compute inner products and norms, and may rely on Hermiticity or use the adjoint of the generator. This section relates these properties of the gradient generator ``G = G[\hat{H}]`` for ``L`` controls, Eq. \eqref{eq:gradgen}, to those of ``\hat{H}``. Throughout, ``G`` is block upper-triangular, with ``\hat{H}`` in all ``L+1`` diagonal blocks.
+Propagation methods use more than the product of the generator with a vector. They estimate spectral ranges, diagonalize, compute inner products and norms, and may rely on Hermiticity or use the adjoint of the generator. Each subsection below starts with a practical consequence for the propagation of gradient vectors and then derives it from a property of the gradient generator ``G = G[\hat{H}]`` for ``L`` controls, Eq. \eqref{eq:gradgen}. Throughout, ``G`` is block upper-triangular, with ``\hat{H}`` in all ``L+1`` diagonal blocks.
 
-### Spectrum
+### [Spectrum](@id Background-Spectrum)
 
-**Proposition 8.** The characteristic polynomial of ``G`` is
+The spectral range of a gradient generator, which methods like the Chebychev propagator require, is the spectral range of ``\hat{H}`` and does not have to be estimated separately. Accordingly, `QuantumGradientGenerators` evaluates `eigvals`, `tr`, and `det` of a [`GradgenOperator`](@ref), as well as its spectral range ([`specrange`](@extref QuantumPropagators.SpectralRange.specrange)), from ``\hat{H}`` alone. For an exact diagonalization, this reduces the dimension from ``N(L+1)`` to ``N``. For an Arnoldi estimate, it avoids the Ritz values of ``G``, which can lie outside of the spectral range, as shown [below](@ref Background-Non-Normality).
 
-```math
-\begin{equation}\label{eq:charpoly}
-\det(G - λ \mathbb{1}) = \det(\hat{H} - λ \mathbb{1})^{L+1}\,.
-\end{equation}
-```
+!!! proposition "Proposition 8"
 
-Thus, ``G`` has the same eigenvalues as ``\hat{H}``, each with ``L+1`` times its algebraic multiplicity, and ``\operatorname{tr} G = (L+1) \operatorname{tr} \hat{H}`` and ``\det G = (\det \hat{H})^{L+1}``. In particular, ``G`` has the same spectral range and spectral radius as ``\hat{H}``, and its eigenvalues are real if ``\hat{H}`` is Hermitian, even though ``G`` is not Hermitian.
+    [](@id Background-prop-charpoly)The characteristic polynomial of the gradient generator ``G`` for ``L`` controls is
+
+    ```math
+    \begin{equation}\label{eq:charpoly}
+    \det(G - λ \mathbb{1}) = \det(\hat{H} - λ \mathbb{1})^{L+1}\,.
+    \end{equation}
+    ```
+
+    Thus, ``G`` has the same eigenvalues as ``\hat{H}``, each with ``L+1`` times its algebraic multiplicity, and ``\operatorname{tr} G = (L+1) \operatorname{tr} \hat{H}`` and ``\det G = (\det \hat{H})^{L+1}``. In particular, ``G`` has the same spectral range and spectral radius as ``\hat{H}``, and its eigenvalues are real if ``\hat{H}`` is Hermitian, even though ``G`` is not Hermitian.
 
 *Proof.* The matrix ``G - λ \mathbb{1}`` is block upper-triangular with diagonal blocks ``\hat{H} - λ \mathbb{1}``, and the determinant of a block-triangular matrix is the product of the determinants of its diagonal blocks. The trace of ``G`` is the sum of the traces of its diagonal blocks, and ``\det G`` is Eq. \eqref{eq:charpoly} at ``λ = 0``. ``\square``
 
-Accordingly, `QuantumGradientGenerators` evaluates `eigvals`, `tr`, and `det` of a [`GradgenOperator`](@ref), as well as its spectral range ([`specrange`](@extref QuantumPropagators.SpectralRange.specrange)), from ``\hat{H}`` alone. For an exact diagonalization, this reduces the dimension from ``N(L+1)`` to ``N``. For an Arnoldi estimate of the spectral range, it avoids the Ritz values of the non-normal matrix ``G``, which can lie outside of the spectral range, see Eq. \eqref{eq:rayleigh} below.
+### [Diagonalizability](@id Background-Diagonalization)
 
-Having the same eigenvalues does not make ``G`` similar to a block-diagonal matrix.
+A gradient generator cannot be propagated by diagonalizing it once and evaluating ``V e^{-\ii D t} V^{-1}`` for any number of time steps, as is common for a constant generator ``\hat{H} = V D V^{-1}``. The gradient generator ``G`` does not have a complete set of eigenvectors, so no such ``V`` exists. A numerical eigensolver does not report this as an error. Instead, it returns a matrix ``V`` with nearly parallel columns, and ``V e^{-\ii D t} V^{-1}`` is then wrong in all digits [MolerSIREV2003; Method 14](@cite). For example, for random Hermitian ``20 \times 20`` matrices ``\hat{H}`` and ``\hat{μ}``, the relative error of the resulting gradient block is larger than one. A method that relies on diagonalization must therefore diagonalize ``\hat{H}``, not ``G``. Methods that evaluate the exponential of ``G`` without diagonalizing it, such as the Chebychev propagator (a polynomial in ``G``) or `ExpProp` (a Padé approximation), are not affected.
 
-**Proposition 9.** Let ``L = 1``, and let ``λ`` be a non-degenerate eigenvalue of ``\hat{H}`` with right and left eigenvectors, ``\hat{H} |r⟩ = λ |r⟩`` and ``⟨l| \hat{H} = λ ⟨l|``. If ``⟨l| \hat{μ} |r⟩ \neq 0``, the eigenspace of ``G`` for ``λ`` is spanned by ``(|r⟩, 0)`` alone. That is, ``λ`` belongs to a ``2 \times 2`` Jordan block of ``G``, and ``G`` is not diagonalizable.
+The reason is that the derivative of a phase grows linearly in time. Let ``L = 1`` ([a single control](@ref Background-Reduction)), let ``\hat{H}`` be Hermitian, and let ``\hat{H} |r⟩ = λ |r⟩`` for a non-degenerate eigenvalue ``λ``. Propagating the gradient vector ``(0, |r⟩)`` yields ``(\partial_ϵ \hat{U}(t) |r⟩, e^{-\ii λ t} |r⟩)`` by [Proposition 1](@ref Background-prop-gradgen-exp): the state only acquires a phase. Inserting ``\hat{U}(s) |r⟩ = e^{-\ii λ s} |r⟩`` and ``⟨r| \hat{U}(t - s) = e^{-\ii λ (t - s)} ⟨r|`` into the integral for ``\partial_ϵ \hat{U}(t)``, Eq. \eqref{eq:duhamel}, gives the component of the gradient state along ``|r⟩``,
 
-*Proof.* The equation ``(G - λ \mathbb{1}) (|x⟩, |y⟩) = 0`` means ``(\hat{H} - λ \mathbb{1}) |y⟩ = 0`` and ``(\hat{H} - λ \mathbb{1}) |x⟩ = -\hat{μ} |y⟩``. The first equation gives ``|y⟩ = c |r⟩``. Applying ``⟨l|`` to the second gives ``0 = -c ⟨l| \hat{μ} |r⟩``, so ``c = 0``, and ``|x⟩`` is a multiple of ``|r⟩``. By the characteristic polynomial, Eq. \eqref{eq:charpoly}, the algebraic multiplicity of ``λ`` in ``G`` is two. ``\square``
+```math
+\begin{equation}\label{eq:phase-derivative}
+⟨r| \partial_ϵ \hat{U}(t) |r⟩
+= -\ii t ⟨r| \hat{μ} |r⟩ e^{-\ii λ t}
+= \frac{\partial}{\partial ϵ} e^{-\ii λ(ϵ) t}\,,
+\end{equation}
+```
 
-For a Hermitian ``\hat{H}``, ``⟨l| = ⟨r|``, and ``⟨r| \hat{μ} |r⟩ = \partial_ϵ λ`` is the derivative of the eigenvalue (the Hellmann–Feynman theorem [FeynmanPR1939](@cite)), which is generically non-zero. In the dual-number picture, the eigenvalue of ``\hat{H}(ϵ + η)`` is ``λ + η \partial_ϵ λ``, and ``ι(λ + η b) = \left(\begin{smallmatrix} λ & b \\ 0 & λ \end{smallmatrix}\right)`` is a Jordan block for ``b \neq 0``. The eigenvalues of a Jordan block are sensitive to perturbations [GolubVanLoan2013; Section 7.2](@cite): changing the lower left entry of this ``2 \times 2`` block from zero to ``δ`` shifts its eigenvalues to ``λ \pm \sqrt{b δ}``. This is a further reason to obtain spectral information from ``\hat{H}``. Polynomials in ``G``, as evaluated by the Chebychev propagator, are not affected by the Jordan structure.
+where ``⟨r| \hat{μ} |r⟩ = \partial_ϵ λ`` is the derivative of the eigenvalue (the Hellmann–Feynman theorem [FeynmanPR1939](@cite)). If ``G`` had a complete set of eigenvectors, every component of ``e^{-\ii G t} Ψ`` would be a linear combination of the pure exponentials ``e^{-\ii λ_j t}``, which cannot produce the term ``t e^{-\ii λ t}``. Thus, whenever an eigenvalue of ``\hat{H}`` depends on the control, ``G`` lacks an eigenvector.
 
-### Non-normality
+!!! proposition "Proposition 9"
 
-**Proposition 10.** If ``G`` is normal, ``G G^\dagger = G^\dagger G``, then all ``\hat{μ}_l = 0``. In particular, a gradient generator with a non-zero control derivative is neither Hermitian nor unitary.
+    [](@id Background-prop-jordan)Let ``L = 1`` ([a single control](@ref Background-Reduction)), and let ``λ`` be a non-degenerate eigenvalue of ``\hat{H}`` with right and left eigenvectors, ``\hat{H} |r⟩ = λ |r⟩`` and ``⟨\tilde{r}| \hat{H} = λ ⟨\tilde{r}|``. If ``⟨\tilde{r}| \hat{μ} |r⟩ \neq 0``, the only eigenvectors of ``G`` for the eigenvalue ``λ`` are the multiples of ``(|r⟩, 0)``, although ``λ`` is a double eigenvalue of ``G``. Hence, ``G`` is not diagonalizable.
 
-*Proof.* For ``l \le L``, the ``l``'th diagonal block of ``G G^\dagger`` is ``\hat{H} \hat{H}^\dagger + \hat{μ}_l \hat{μ}_l^\dagger``, and that of ``G^\dagger G`` is ``\hat{H}^\dagger \hat{H}``. If the two are equal, taking the trace and using ``\operatorname{tr}(\hat{H} \hat{H}^\dagger) = \operatorname{tr}(\hat{H}^\dagger \hat{H})`` gives ``\operatorname{tr}(\hat{μ}_l \hat{μ}_l^\dagger) = 0``, so ``\hat{μ}_l = 0``. ``\square``
+*Proof.* The equation ``(G - λ \mathbb{1}) (|x⟩, |y⟩) = 0`` means ``(\hat{H} - λ \mathbb{1}) |y⟩ = 0`` and ``(\hat{H} - λ \mathbb{1}) |x⟩ = -\hat{μ} |y⟩``. The first equation gives ``|y⟩ = c |r⟩``. Applying ``⟨\tilde{r}|`` to the second gives ``0 = -c ⟨\tilde{r}| \hat{μ} |r⟩``, so ``c = 0``, and ``|x⟩`` is a multiple of ``|r⟩``. By the characteristic polynomial, Eq. \eqref{eq:charpoly}, ``λ`` is a double eigenvalue of ``G``. ``\square``
 
-Several properties of Hermitian generators that propagation methods may rely on therefore do not carry over to gradient generators. The time evolution operator ``e^{-\ii G t}`` is not unitary, even for a Hermitian ``\hat{H}``, so the norm of a gradient vector is not conserved: by Eq. \eqref{eq:gradgen-exp}, the gradient states grow from zero. Krylov methods must use the Arnoldi iteration [ArnoldiQAM1951](@cite) rather than the Lanczos iteration [LanczosJRNBS1950](@cite), which assumes a Hermitian generator [GolubVanLoan2013; Chapter 10](@cite). Accordingly, `ishermitian` is `false` for a `GradgenOperator`. Moreover, the numerical range of ``G``, the set of Rayleigh quotients ``⟨v| G |v⟩`` for normalized vectors ``v``, contains the spectrum, but for a non-normal matrix, it can extend beyond the convex hull of the spectrum [HornJohnson1991; Chapter 1](@cite). For example, let ``L = 1``, let ``\hat{H}`` be Hermitian, and let ``|e⟩`` be the eigenvector for its largest eigenvalue ``E_{\max}``. For ``v = (s |e⟩, |e⟩) / \sqrt{2}`` with ``s = \pm 1``,
+In the language of linear algebra, ``λ`` belongs to a ``2 \times 2`` Jordan block of ``G``. In the dual-number picture, the eigenvalue of ``\hat{H}(ϵ + η)`` is ``λ + η \partial_ϵ λ``, and its block representation ``ι(λ + η \partial_ϵ λ) = \left(\begin{smallmatrix} λ & \partial_ϵ λ \\ 0 & λ \end{smallmatrix}\right)`` is that Jordan block. Its exponential, ``e^{-\ii λ t} \left(\begin{smallmatrix} 1 & -\ii t \partial_ϵ λ \\ 0 & 1 \end{smallmatrix}\right)``, contains the derivative of the phase in Eq. \eqref{eq:phase-derivative}. The Jordan structure is thus not a defect of the construction, but the way in which ``G`` encodes the derivative. By the [reduction to a single control](@ref Background-Reduction), the ``l``'th gradient state evolves exactly as under the single-control gradient generator ``G_l``, so for ``L`` controls, ``G`` is not diagonalizable as soon as ``⟨\tilde{r}| \hat{μ}_l |r⟩ \neq 0`` for any of the controls.
+
+### [Non-normality](@id Background-Non-Normality)
+
+Methods that assume a Hermitian generator, such as the Lanczos iteration, norm conservation, or bounds on expectation values, do not apply to a gradient generator, even if ``\hat{H}`` is Hermitian.
+
+The norm of a gradient vector is not conserved, since ``e^{-\ii G t}`` is not unitary. By Eq. \eqref{eq:gradgen-exp}, the gradient states grow from zero, and by Eq. \eqref{eq:phase-derivative}, they may grow linearly in time. A propagation method must not renormalize gradient vectors or test them for norm conservation.
+
+Krylov methods must use the Arnoldi iteration [ArnoldiQAM1951](@cite) rather than the Lanczos iteration [LanczosJRNBS1950](@cite), which assumes a Hermitian generator [GolubVanLoan2013; Chapter 10](@cite). Accordingly, `ishermitian` is `false` for a `GradgenOperator`.
+
+Expectation values ``⟨v| G |v⟩`` in normalized vectors ``v`` (also called Rayleigh quotients) can lie outside the spectral range of ``\hat{H}``, which is also the spectral range of ``G``. For example, let ``L = 1`` ([a single control](@ref Background-Reduction)), let ``\hat{H}`` be Hermitian, and let ``|e⟩`` be the eigenvector for its largest eigenvalue ``E_{\max}``. For ``v = (s |e⟩, |e⟩) / \sqrt{2}`` with ``s = \pm 1``,
 
 ```math
 \begin{equation}\label{eq:rayleigh}
@@ -414,11 +448,19 @@ Several properties of Hermitian generators that propagation methods may rely on 
 \end{equation}
 ```
 
-which exceeds ``E_{\max}`` for one choice of ``s`` whenever ``⟨e| \hat{μ} |e⟩ \neq 0``. Ritz values lie in the numerical range, so the Ritz values of ``G`` from an Arnoldi iteration can lie outside the spectral range of ``\hat{H}``. Likewise, a check that bounds Rayleigh quotients by the spectral range is not valid for a gradient generator. For example, the optional `check_normalization` of the Chebychev propagator can fail for a gradient vector, even though the spectral range is correct.
+which exceeds ``E_{\max}`` for one choice of ``s`` whenever ``⟨e| \hat{μ} |e⟩ \neq 0``. The Ritz values of an Arnoldi iteration are expectation values of this kind, so an Arnoldi estimate of the spectral range of ``G`` can be too large, which is why `specrange` uses ``\hat{H}`` [instead](@ref Background-Spectrum). Likewise, a check that bounds expectation values by the spectral range is not valid for a gradient generator. For example, the optional `check_normalization` of the Chebychev propagator can fail for a gradient vector, even though the spectral range is correct.
 
-### Adjoint
+All of these shortcuts rely on the generator being Hermitian, or at least *normal*. A matrix ``A`` is normal if it commutes with its adjoint, ``A A^\dagger = A^\dagger A``. Equivalently, it has a complete set of orthonormal eigenvectors, that is, it can be diagonalized by a unitary transformation. Hermitian and unitary matrices are normal. In the orthonormal eigenbasis of a normal matrix, an expectation value ``⟨v| A |v⟩ = \sum_j |⟨j|v⟩|^2 λ_j`` is a weighted average of the eigenvalues ``λ_j``, and thus lies within the spectral range. For a non-normal matrix, there is no orthonormal eigenbasis, and expectation values can lie outside of it [HornJohnson1991; Chapter 1](@cite). A gradient generator is never normal.
 
-The adjoint of the gradient generator is block lower-triangular. For ``L = 1``,
+!!! proposition "Proposition 10"
+
+    [](@id Background-prop-non-normal)If ``G`` is normal, ``G G^\dagger = G^\dagger G``, then all ``\hat{μ}_l = 0``. In particular, a gradient generator with a non-zero control derivative is neither Hermitian nor unitary.
+
+*Proof.* For ``l \le L``, the ``l``'th diagonal block of ``G G^\dagger`` is ``\hat{H} \hat{H}^\dagger + \hat{μ}_l \hat{μ}_l^\dagger``, and that of ``G^\dagger G`` is ``\hat{H}^\dagger \hat{H}``. If the two are equal, taking the trace and using ``\operatorname{tr}(\hat{H} \hat{H}^\dagger) = \operatorname{tr}(\hat{H}^\dagger \hat{H})`` gives ``\operatorname{tr}(\hat{μ}_l \hat{μ}_l^\dagger) = 0``, so ``\hat{μ}_l = 0``. ``\square``
+
+### [Adjoint](@id Background-Adjoint)
+
+For a backward propagation, as in GRAPE, the gradient generator must be constructed from the adjoint dynamical generator. This is ``G[\hat{H}^\dagger]``, with ``\hat{μ}^\dagger`` in its upper right block, as discussed for the [exponential of the gradient generator](@ref Background-Exponential). The adjoint of the gradient generator, ``G[\hat{H}]^\dagger``, is a different matrix, and propagating under it does not yield any gradient. It is block lower-triangular. For ``L = 1`` ([a single control](@ref Background-Reduction)),
 
 ```math
 \begin{equation}\label{eq:gradgen-adjoint}
@@ -430,11 +472,11 @@ P = \begin{pmatrix} 0 & \mathbb{1} \\ \mathbb{1} & 0 \end{pmatrix}\,,
 \end{equation}
 ```
 
-where ``G[\hat{H}^\dagger]`` is the gradient generator for ``\hat{H}^\dagger``, with ``\hat{μ}^\dagger`` in its upper right block. Thus, ``G[\hat{H}]^\dagger \neq G[\hat{H}^\dagger]`` unless ``\hat{μ} = 0``, although the two matrices are similar. A backward propagation, as in GRAPE, requires ``G[\hat{H}^\dagger]``, the gradient generator of the adjoint generator, not the adjoint of the gradient generator. `QuantumGradientGenerators` does not define `adjoint` for a gradient generator. Instead, the gradient generator for a backward propagation is constructed from the adjoint dynamical generator.
+so a gradient vector ``(0, |χ⟩)`` propagated under ``G[\hat{H}]^\dagger`` keeps a zero gradient state. The two matrices are similar, but ``G[\hat{H}]^\dagger \neq G[\hat{H}^\dagger]`` unless ``\hat{μ} = 0``. To prevent this mistake, `QuantumGradientGenerators` does not define `adjoint` for a gradient generator. See the [how-to guide on backward propagation](@ref Howto-Backward) for an example.
 
-### Inner products and norms
+### [Inner products and norms](@id Background-Norm)
 
-For two gradient vectors ``Ψ`` and ``Φ``, `dot(Ψ, Φ)` is the inner product of the block vectors, ``⟨Ψ|Φ⟩ + \sum_l ⟨Ψ^\prime_l|Φ^\prime_l⟩`` in terms of their states and gradient states, and `norm(Ψ)` is the corresponding Euclidean norm, ``\big(⟨Ψ|Ψ⟩ + \sum_l ⟨Ψ^\prime_l|Ψ^\prime_l⟩\big)^{1/2}``. These are the inner product and norm of the [flat semantics](@ref Background-Semantics). That `norm` and `dot` are consistent is essential for the Arnoldi iteration, which normalizes its basis vectors with the norm and orthogonalizes them with the inner product.
+Inner products and norms treat a gradient vector as one long vector of dimension ``N(L+1)``: for two gradient vectors ``Ψ`` and ``Φ``, `dot(Ψ, Φ)` is the inner product of the block vectors, ``⟨Ψ|Φ⟩ + \sum_l ⟨Ψ^\prime_l|Φ^\prime_l⟩`` in terms of their states and gradient states, and `norm(Ψ)` is the corresponding Euclidean norm, ``\big(⟨Ψ|Ψ⟩ + \sum_l ⟨Ψ^\prime_l|Ψ^\prime_l⟩\big)^{1/2}``. These are the inner product and norm of the [flat semantics](@ref Background-Semantics), not the dual-valued inner product of the full dual semantics. That `norm` and `dot` are consistent is essential for the Arnoldi iteration, which normalizes its basis vectors with the norm and orthogonalizes them with the inner product.
 
 
 ## [Time-dependent generators and parameters](@id Background-Time-Dependent)
@@ -458,13 +500,15 @@ G_u(t) = \begin{pmatrix} \hat{H}(t; u) & \partial_u \hat{H}(t; u) \\ 0 & \hat{H}
 
 and ``\hat{U}_G(t, t_0)`` is the time evolution operator for ``\ii \frac{d}{dt} Ψ(t) = G_u(t) Ψ(t)``.
 
-**Proposition 11.** ``\hat{U}(t, t_0; u)`` is continuously differentiable in ``u``, and
+!!! proposition "Proposition 11"
 
-```math
-\begin{equation}\label{eq:gradgen-u-prop}
-\hat{U}_G(t, t_0) = \begin{pmatrix} \hat{U}(t, t_0) & \partial_u \hat{U}(t, t_0) \\ 0 & \hat{U}(t, t_0) \end{pmatrix}\,.
-\end{equation}
-```
+    [](@id Background-prop-time-dependent)``\hat{U}(t, t_0; u)`` is continuously differentiable in ``u``, and
+
+    ```math
+    \begin{equation}\label{eq:gradgen-u-prop}
+    \hat{U}_G(t, t_0) = \begin{pmatrix} \hat{U}(t, t_0) & \partial_u \hat{U}(t, t_0) \\ 0 & \hat{U}(t, t_0) \end{pmatrix}\,.
+    \end{equation}
+    ```
 
 *Proof.* By the standard theorem on the differentiable dependence of solutions of ordinary differential equations on parameters [Hartman2002; Chapter V](@cite) (applied to one interval of the partition after the other), ``\hat{U}`` is continuously differentiable in ``u``, and ``\partial_u \hat{U}`` solves the equation obtained by differentiating Eq. \eqref{eq:tdse-U},
 
@@ -475,7 +519,7 @@ and ``\hat{U}_G(t, t_0)`` is the time evolution operator for ``\ii \frac{d}{dt} 
 \end{equation}
 ```
 
-The rest of the proof is identical to that of the block form of ``e^{-\ii G t}`` (Proposition 1): the right-hand side ``W(t)`` of Eq. \eqref{eq:gradgen-u-prop} satisfies ``W(t_0) = \mathbb{1}`` and ``\ii \frac{d}{dt} W = G_u(t) W``, as does ``\hat{U}_G(t, t_0)``. ``\square``
+The rest of the proof is identical to that of the block form of ``e^{-\ii G t}`` ([Proposition 1](@ref Background-prop-gradgen-exp)): the right-hand side ``W(t)`` of Eq. \eqref{eq:gradgen-u-prop} satisfies ``W(t_0) = \mathbb{1}`` and ``\ii \frac{d}{dt} W = G_u(t) W``, as does ``\hat{U}_G(t, t_0)``. ``\square``
 
 For a generator that is constant in time, Eq. \eqref{eq:gradgen-u-prop} reduces to the block form of ``e^{-\ii G t}``, Eq. \eqref{eq:gradgen-exp}. As for a single time step, Eq. \eqref{eq:chain}, applying Eq. \eqref{eq:gradgen-u-prop} to a gradient vector gives
 
@@ -541,29 +585,33 @@ with the backward-propagated states ``|χ_k(t)⟩ = \hat{U}^\dagger(T, t) |χ_k(
 
 The block form of ``\hat{U}_G``, Eq. \eqref{eq:gradgen-u-prop}, holds for the exact time evolution. In practice, the propagation under ``G_u(t)`` is numerical, either with a general ODE solver or with a piecewise-constant approximation. As in the [reduction to a single control](@ref Background-Reduction), it suffices to consider a single parameter ``u``.
 
-**Proposition 12.** Consider a Runge–Kutta or linear multistep method (explicit or implicit, with exact solution of the linear systems for implicit methods) on a time grid that does not depend on ``u``. Applying the method to ``\ii \frac{d}{dt} Ψ = G_u(t) Ψ`` with the initial gradient vector ``(\partial_u |Ψ(0)⟩, |Ψ(0)⟩)`` yields gradient vectors ``(\partial_u |Ψ_n⟩, |Ψ_n⟩)``, where ``|Ψ_n⟩`` is the numerical solution of Eq. \eqref{eq:tdse} with ``\hat{H}(t; u)`` by the same method.
+!!! proposition "Proposition 12"
 
-*Proof.* Each step of the method uses only linear combinations with coefficients that depend on the method and the time steps, applications of the generator at fixed times, and, for implicit methods, solutions of linear systems with matrices assembled linearly from ``\mathbb{1}`` and the generator at fixed times. These are the operations for which forward-mode differentiation through gradient generators is exact (Proposition 6). ``\square``
+    [](@id Background-prop-ode-solvers)Consider a Runge–Kutta or linear multistep method (explicit or implicit, with exact solution of the linear systems for implicit methods) on a time grid that does not depend on ``u``. Applying the method to ``\ii \frac{d}{dt} Ψ = G_u(t) Ψ`` with the initial gradient vector ``(\partial_u |Ψ(0)⟩, |Ψ(0)⟩)`` yields gradient vectors ``(\partial_u |Ψ_n⟩, |Ψ_n⟩)``, where ``|Ψ_n⟩`` is the numerical solution of Eq. \eqref{eq:tdse} with ``\hat{H}(t; u)`` by the same method.
+
+*Proof.* Each step of the method uses only linear combinations with coefficients that depend on the method and the time steps, applications of the generator at fixed times, and, for implicit methods, solutions of linear systems with matrices assembled linearly from ``\mathbb{1}`` and the generator at fixed times. These are the operations for which forward-mode differentiation through gradient generators is exact ([Proposition 6](@ref Background-prop-linear-algebra)). ``\square``
 
 Thus, differentiating the discretized propagation and discretizing the equation of motion for the derivative \eqref{eq:variational} give the same result, and the gradient is consistent with the computed state to machine precision. This requires that the time steps do not depend on ``u``. With an adaptive step size control, the gradient states are not the exact derivative of the computed state, but they still converge to ``\partial_u |Ψ(T)⟩`` as the tolerance decreases, provided the error control includes the gradient states, as in the [flat semantics](@ref Background-Semantics).
 
 The second approach is the piecewise-constant approximation that [`QuantumPropagators`](@extref QuantumPropagators :doc:`index`) uses for time-dependent generators. On each interval of the time grid, the generator is evaluated at a fixed time ``\tilde{t}_n``, by default the midpoint of the interval, giving ``\hat{H}_n(u) = \hat{H}(\tilde{t}_n; u)``, the propagators ``\hat{U}_n = e^{-\ii \hat{H}_n dt_n}``, and the approximate final state ``|\bar{Ψ}(T)⟩ = \hat{U}_{N_T} \cdots \hat{U}_1 |Ψ(0)⟩``.
 
-**Proposition 13.** Let ``G_n = G_u(\tilde{t}_n)`` be the gradient generator evaluated at the same times ``\tilde{t}_n`` as the generator. Then
+!!! proposition "Proposition 13"
 
-```math
-\begin{equation}\label{eq:pwc}
-e^{-\ii G_{N_T} dt_{N_T}} \cdots e^{-\ii G_1 dt_1}
-\begin{pmatrix} \partial_u |Ψ(0)⟩ \\ |Ψ(0)⟩ \end{pmatrix}
-= \begin{pmatrix} \partial_u |\bar{Ψ}(T)⟩ \\ |\bar{Ψ}(T)⟩ \end{pmatrix}\,,
-\end{equation}
-```
+    [](@id Background-prop-pwc)Let ``G_n = G_u(\tilde{t}_n)`` be the gradient generator evaluated at the same times ``\tilde{t}_n`` as the generator. Then
 
-and as ``\max_n dt_n \rightarrow 0``, the right-hand side converges to ``(\partial_u |Ψ(T)⟩, |Ψ(T)⟩)``.
+    ```math
+    \begin{equation}\label{eq:pwc}
+    e^{-\ii G_{N_T} dt_{N_T}} \cdots e^{-\ii G_1 dt_1}
+    \begin{pmatrix} \partial_u |Ψ(0)⟩ \\ |Ψ(0)⟩ \end{pmatrix}
+    = \begin{pmatrix} \partial_u |\bar{Ψ}(T)⟩ \\ |\bar{Ψ}(T)⟩ \end{pmatrix}\,,
+    \end{equation}
+    ```
+
+    and as ``\max_n dt_n \rightarrow 0``, the right-hand side converges to ``(\partial_u |Ψ(T)⟩, |Ψ(T)⟩)``.
 
 *Proof.* Since ``\tilde{t}_n`` does not depend on ``u``, ``G_n = G[\hat{H}_n]``, and Eq. \eqref{eq:pwc} is the product rule over multiple time steps, Eq. \eqref{eq:multistep}. The left-hand side is the time evolution under the piecewise-constant ``\bar{G}(t) = G_n`` for ``t \in (t_{n-1}, t_n]``. By variation of constants, ``\hat{U}_{\bar{G}}(T, 0) - \hat{U}_G(T, 0) = -\ii \int_0^T \hat{U}_{\bar{G}}(T, t) (\bar{G}(t) - G_u(t)) \hat{U}_G(t, 0) dt``, which vanishes as ``\max_n dt_n \rightarrow 0`` because ``G_u(t)`` is uniformly continuous on each interval of the partition. The convergence then follows from the block form of ``\hat{U}_G(T, 0)``, Eq. \eqref{eq:gradgen-u-prop}. ``\square``
 
-The gradient states are thus the exact derivative of the piecewise-constant approximation, and they converge to the exact derivative together with it (to second order in ``dt`` for smooth controls and midpoint evaluation). Each step ``e^{-\ii G_n dt_n}`` is evaluated with one of the propagators in `QuantumPropagators`, so Eq. \eqref{eq:pwc} holds to the precision of that propagator, and exactly for a polynomial propagator with ``u``-independent coefficients, whose gradient states are the exact derivative of its approximation (Corollary 7). It is essential that ``\partial_u \hat{H}`` is evaluated at the same times ``\tilde{t}_n`` as ``\hat{H}``. Otherwise, the gradient states still converge to the exact derivative, but they are not the derivative of the computed state ``|\bar{Ψ}(T)⟩``, and the mismatch between the computed functional and its gradient, of the order of the time discretization error, can stall a gradient-based optimization close to convergence.
+The gradient states are thus the exact derivative of the piecewise-constant approximation, and they converge to the exact derivative together with it (to second order in ``dt`` for smooth controls and midpoint evaluation). Each step ``e^{-\ii G_n dt_n}`` is evaluated with one of the propagators in `QuantumPropagators`, so Eq. \eqref{eq:pwc} holds to the precision of that propagator, and exactly for a polynomial propagator with ``u``-independent coefficients, whose gradient states are the exact derivative of its approximation ([Corollary 7](@ref Background-cor-polynomial)). It is essential that ``\partial_u \hat{H}`` is evaluated at the same times ``\tilde{t}_n`` as ``\hat{H}``. Otherwise, the gradient states still converge to the exact derivative, but they are not the derivative of the computed state ``|\bar{Ψ}(T)⟩``, and the mismatch between the computed functional and its gradient, of the order of the time discretization error, can stall a gradient-based optimization close to convergence.
 
 ### Remarks
 

@@ -23,7 +23,7 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 * Added: A section about the properties of the gradient generator (spectrum, Jordan structure, non-normality, adjoint), and a discussion of the "flat", "frozen", and "full dual" semantics of propagating gradient vectors with different numerical methods, on the "Background" page of the documentation
 * Added: How-to guides in the documentation for the backward propagation of gradient vectors, for gradient vectors with the Chebychev propagator, and for controlling the time steps of an adaptive ODE solver for gradient vectors
 * Fixed: `isreal` for a `GradgenOperator` no longer throws a `MethodError`
-* Fixed: `norm(Ψ)` for a `GradVector` is now the Euclidean norm of the block vector, consistent with `dot`. Previously, it was the sum of the norms of the state and the gradient states
+* Fixed: `norm(Ψ)` for a `GradVector` is now the Euclidean norm of the block vector, consistent with `dot`. Previously, it was the sum of the norms of the state and the gradient states. As a consequence, `check_normalization=true` in the Chebychev propagator of QuantumPropagators, which is not valid for gradient vectors, now fails instead of passing by accident
 
 
 ## [v0.1.10] — 2026-09-16

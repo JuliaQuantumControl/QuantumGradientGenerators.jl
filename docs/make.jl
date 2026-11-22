@@ -59,6 +59,7 @@ makedocs(;
             asset(
                 "https://juliaquantumcontrol.github.io/QuantumControl.jl/dev/assets/topbar/topbar.js"
             ),
+            "assets/admonitions.css",
         ],
         mathengine = MathJax3(
             Dict(
