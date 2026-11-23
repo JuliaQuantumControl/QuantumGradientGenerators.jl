@@ -12,12 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases).
 
 
-## [Unreleased]
+## [v0.2.0] — 2026-11-22
 
 * Changed: The field `G` of `GradGenerator` and `GradgenOperator` is now `H`, and the field `control_deriv_ops` of `GradgenOperator` is now `control_derivs`, the same name as in `GradGenerator`. To adapt, replace `G.G` with `G.H` and `G.control_deriv_ops` with `G.control_derivs` for any gradient generator `G`. The positional arguments of the `GradgenOperator` constructor are unchanged
 * Changed: The documentation uses a simplified notation that matches the field names: the dynamical generator `H`, the control derivatives `control_derivs` (μ̂ₗ), the gradient generator `G`, and the gradient vector `Ψ` with the state `Ψ.state` and the gradient states `Ψ.grad_states` (Ψ′ₗ)
 * Changed: `specrange` for a `GradgenOperator` now computes the spectral range of the dynamical generator `G.H`, which is the spectral range of the gradient generator. This is more efficient, and it avoids estimating the spectral range of a non-normal matrix with the `:arnoldi` method. With `method=:auto`, the choice between `:diag` and `:arnoldi` is based on the size of `G.H`
-* Changed: `similar(Ψ, S)` for a `GradVector` now returns a `GradVector` with element type `S`, instead of a flat `Vector{S}`
+* Changed: `similar(Ψ, S)` for a `GradVector` now returns a `GradVector` with element type `S`, instead of a flat `Vector{S}`. Code that needs a flat vector should allocate it explicitly, e.g., with `Vector{S}(undef, length(Ψ))`
 * Added: An overview of the gradient generator and the gradient vector in the documentation
 * Added: A "Background" page in the documentation that proves that propagating a gradient vector under a gradient generator yields the exact derivatives of the propagated state, interprets gradient vectors as dual numbers in forward-mode automatic differentiation, and extends the theory to time-dependent generators and to arbitrary control parameters (the basis for GOAT-type methods)
 * Added: `eigvals`, `tr`, and `det` for a `GradgenOperator`, evaluated from the dynamical generator `G.H`
@@ -27,7 +27,7 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 * Added: `frozen_internalnorm` and `flat_internalnorm`, to select the error norm of an adaptive ODE solver for a `GradVector` via `internalnorm`. With `flat_internalnorm`, the error estimate includes the gradient states
 * Fixed: `isreal` for a `GradgenOperator` no longer throws a `MethodError`
 * Fixed: The in-place propagation of a `GradVector` with the ExponentialUtilities propagator of QuantumPropagators (`method = ExponentialUtilities`), via an extension for ExponentialUtilities
-* Fixed: `norm(Ψ)` for a `GradVector` is now the Euclidean norm of the block vector, consistent with `dot`. Previously, it was the sum of the norms of the state and the gradient states. As a consequence, `check_normalization=true` in the Chebychev propagator of QuantumPropagators, which is not valid for gradient vectors, now fails instead of passing by accident
+* Fixed: `norm(Ψ)` for a `GradVector` is now the Euclidean norm of the block vector, consistent with `dot`. Previously, it was the sum of the norms of the state and the gradient states. As a consequence, `check_normalization=true` in the Chebychev propagator of QuantumPropagators, which is not valid for gradient vectors, now fails instead of passing by accident. Code that relied on the previous value can compute it as `norm(Ψ.state) + sum(norm, Ψ.grad_states)`
 
 
 ## [v0.1.10] — 2026-09-16
@@ -92,7 +92,8 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 
 Initial public release
 
-[Unreleased]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/compare/v0.1.10..HEAD
+[Unreleased]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/compare/v0.2.0..HEAD
+[v0.2.0]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.2.0
 [v0.1.10]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.1.10
 [v0.1.9]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.1.9
 [v0.1.8]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.1.8
