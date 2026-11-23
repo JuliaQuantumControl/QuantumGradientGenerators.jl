@@ -55,12 +55,11 @@ norm(Ψ.grad_states[1] - dΨ_fd)</code></pre><pre class="documenter-example-outp
 (
     state_error = norm(Ψ.state - Ψ_exact.state),
     gradient_error = norm(Ψ.grad_states[1] - Ψ_exact.grad_states[1]),
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(state_error = 0.00530429663332708, gradient_error = 0.013264862984084101)</code></pre><p>Both the state and the gradient deviate from the exact result at the level of the truncation error of the Chebychev series. With the default <code>cheby_coeffs_limit = 1e-12</code>, both are accurate to near machine precision.</p><h2 id="Howto-ODE"><a class="docs-heading-anchor" href="#Howto-ODE">How to control the time steps of an adaptive ODE solver for gradient vectors</a><a id="Howto-ODE-1"></a><a class="docs-heading-anchor-permalink" href="#Howto-ODE" title="Permalink"></a></h2><p>When a gradient vector is propagated with an adaptive ODE solver, the error estimate that determines the time steps can include the gradient states or ignore them. With the default error norm, it includes them (the <em>flat</em> semantics). With an error norm that looks only at the state, the solver takes exactly the time steps it would take for the state alone (the <em>frozen</em> semantics). See <a href="../background/#Background-Semantics">Flat, frozen, and dual semantics</a> for the theory. This guide shows how to select either behavior and what the choice does to the cost and the accuracy of the gradient.</p><p>The ODE solvers in <a href="https://github.com/SciML/OrdinaryDiffEq.jl">OrdinaryDiffEq</a> require the state to be an array. A <a href="../api/#QuantumGradientGenerators.GradVector"><code>GradVector</code></a> is not an array, so represent the gradient vector as a flat vector with the gradient states first and the state last, <span>$(|Ψ^\prime_1⟩, \dots, |Ψ^\prime_L⟩, |Ψ⟩)$</span>. A <a href="../api/#QuantumGradientGenerators.GradgenOperator"><code>GradgenOperator</code></a> applies to such a vector block by block.</p><pre><code class="language-julia hljs">using LinearAlgebra
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(state_error = 0.00530429663332708, gradient_error = 0.013264862984084101)</code></pre><p>Both the state and the gradient deviate from the exact result at the level of the truncation error of the Chebychev series. With the default <code>cheby_coeffs_limit = 1e-12</code>, both are accurate to near machine precision.</p><h2 id="Howto-ODE"><a class="docs-heading-anchor" href="#Howto-ODE">How to control the time steps of an adaptive ODE solver for gradient vectors</a><a id="Howto-ODE-1"></a><a class="docs-heading-anchor-permalink" href="#Howto-ODE" title="Permalink"></a></h2><p>When a gradient vector is propagated with an adaptive ODE solver, the error estimate that determines the time steps can ignore the gradient states or include them. By default, it ignores them, and the solver takes exactly the time steps it would take for the state alone (the <em>frozen</em> semantics). With <a href="../api/#QuantumGradientGenerators.flat_internalnorm"><code>flat_internalnorm</code></a> as the error norm, it includes them (the <em>flat</em> semantics). See <a href="../background/#Background-Semantics">Flat, frozen, and dual semantics</a> for the theory. This guide shows how to select either behavior and what the choice does to the cost and the accuracy of the gradient.</p><p>A <a href="../api/#QuantumGradientGenerators.GradVector"><code>GradVector</code></a> can be propagated with the ODE solvers in <a href="https://github.com/SciML/OrdinaryDiffEq.jl">OrdinaryDiffEq</a> like any other state:</p><pre><code class="language-julia hljs">using LinearAlgebra
 using Printf
 using OrdinaryDiffEq
-using DiffEqBase: ODE_DEFAULT_NORM
 using QuantumPropagators: hamiltonian, propagate, init_prop, prop_step!
-using QuantumGradientGenerators: GradGenerator
+using QuantumGradientGenerators: GradGenerator, GradVector, flat_internalnorm
 
 Ĥ₀ = ComplexF64[0 0 0; 0 1.0 0; 0 0 2.1]
 Ĥ₁ = ComplexF64[0 1 0; 1 0 √2; 0 √2 0]
@@ -70,41 +69,23 @@ tlist = [0.0, T]
 Ψ₀ = ComplexF64[1, 0, 0]
 
 H(u) = hamiltonian(Ĥ₀ + u * Ĥ₁, (Ĥ₁, ϵ))
-G = GradGenerator(H(0.0))
-
-N = length(Ψ₀)  # dimension of the Hilbert space
-L = 1  # number of gradient states
-Ψ_flat = [zeros(ComplexF64, L * N); Ψ₀]
-state_idxs = (L*N+1):((L+1)*N)
-grad_idxs = 1:N  # first gradient state</code></pre><p>As in the <a href="#Howto-Cheby">Chebychev guide</a>, the derivative is with respect to a static offset <span>$u$</span> of the control.</p><p>For the flat semantics, propagate with the default error norm. The flat vector does not pass the interface check that <a href="https://juliaquantumcontrol.github.io/QuantumPropagators.jl/dev/api/quantumpropagators/#QuantumPropagators.propagate"><code>propagate</code></a> runs by default (<code>GradgenOperator</code> implements <code>mul!</code> for a flat vector, but not <code>*</code>), so disable the check with <code>check = false</code>:</p><pre><code class="language-julia hljs">Ψ = propagate(
-    Ψ_flat,
+G = GradGenerator(H(0.0))</code></pre><p>As in the <a href="#Howto-Cheby">Chebychev guide</a>, the derivative is with respect to a static offset <span>$u$</span> of the control.</p><p>For the frozen semantics, propagate with the default error norm:</p><pre><code class="language-julia hljs">Ψ = propagate(GradVector(Ψ₀, 1), G, tlist; method = OrdinaryDiffEq, reltol = 1e-6, abstol = 1e-6)</code></pre><p>The default error norm for a gradient vector is <a href="../api/#QuantumGradientGenerators.frozen_internalnorm"><code>frozen_internalnorm</code></a>, the default norm of OrdinaryDiffEq (the root mean square of all elements) evaluated for <code>Ψ.state</code> only.</p><p>For the flat semantics, pass <code>internalnorm = flat_internalnorm</code>, the root mean square of all elements of the state and the gradient states:</p><pre><code class="language-julia hljs">Ψ = propagate(
+    GradVector(Ψ₀, 1),
     G,
     tlist;
     method = OrdinaryDiffEq,
-    check = false,
-    reltol = 1e-6,
-    abstol = 1e-6
-)</code></pre><p>For the frozen semantics, pass an <code>internalnorm</code> that evaluates the default norm on the state component only. OrdinaryDiffEq also calls the norm on individual numbers, which requires a second method:</p><pre><code class="language-julia hljs">state_norm(u::AbstractVector, t) = ODE_DEFAULT_NORM(view(u, state_idxs), t)
-state_norm(u::Number, t) = ODE_DEFAULT_NORM(u, t)
-
-Ψ = propagate(
-    Ψ_flat,
-    G,
-    tlist;
-    method = OrdinaryDiffEq,
-    check = false,
     reltol = 1e-6,
     abstol = 1e-6,
-    internalnorm = state_norm
-)</code></pre><p>In either case, the state is <code>Ψ[state_idxs]</code> and the gradient state is <code>Ψ[grad_idxs]</code>.</p><p>To decide between the two, compare them over a range of tolerances. The following propagates the state alone, and the gradient vector in both modes, and reports the number of time steps (from the underlying OrdinaryDiffEq integrator), the deviation of the state from the propagation of the state alone, and the error of the gradient relative to a reference propagation with a tight tolerance:</p><pre><code class="language-julia hljs">function propagate_ode(Ψ, generator; kwargs...)
+    internalnorm = flat_internalnorm
+)</code></pre><p>To decide between the two, compare them over a range of tolerances. The following propagates the state alone (&quot;bare&quot;), and the gradient vector with both norms, and reports the number of time steps (from the underlying OrdinaryDiffEq integrator), the deviation of the state from the propagation of the state alone, and the error of the gradient relative to a reference propagation with a tight tolerance:</p><pre><code class="language-julia hljs">function propagate_ode(Ψ, generator; kwargs...)
     propagator = init_prop(Ψ, generator, tlist; method = OrdinaryDiffEq, kwargs...)
     prop_step!(propagator)
     return copy(propagator.state), propagator.integrator.stats.naccept
 end
 
-Ψ_ref, _ = propagate_ode(Ψ_flat, G; alg = Vern9(), reltol = 1e-14, abstol = 1e-14)
+Ψ_ref, _ = propagate_ode(GradVector(Ψ₀, 1), G; alg = Vern9(), reltol = 1e-14, abstol = 1e-14)
 
-@printf(&quot;%7s | %5s | %-27s | %-27s\n&quot;, &quot;&quot;, &quot;bare&quot;, &quot;flat&quot;, &quot;frozen&quot;)
+@printf(&quot;%7s | %5s | %-27s | %-27s\n&quot;, &quot;&quot;, &quot;bare&quot;, &quot;frozen&quot;, &quot;flat&quot;)
 @printf(
     &quot;%7s | %5s | %5s %10s %10s | %5s %10s %10s\n&quot;,
     &quot;tol&quot;,
@@ -119,22 +100,22 @@ end
 for tol in (1e-4, 1e-6, 1e-8, 1e-10)
     kw = (; reltol = tol, abstol = tol)
     Ψ_bare, n_bare = propagate_ode(Ψ₀, H(0.0); kw...)
-    Ψ_flat_T, n_flat = propagate_ode(Ψ_flat, G; kw...)
-    Ψ_frozen_T, n_frozen = propagate_ode(Ψ_flat, G; internalnorm = state_norm, kw...)
+    Ψ_frozen, n_frozen = propagate_ode(GradVector(Ψ₀, 1), G; kw...)
+    Ψ_flat, n_flat = propagate_ode(GradVector(Ψ₀, 1), G; internalnorm = flat_internalnorm, kw...)
     @printf(
         &quot;%7.0e | %5d | %5d %10.2e %10.2e | %5d %10.2e %10.2e\n&quot;,
         tol,
         n_bare,
-        n_flat,
-        norm(Ψ_flat_T[state_idxs] - Ψ_bare),
-        norm(Ψ_flat_T[grad_idxs] - Ψ_ref[grad_idxs]),
         n_frozen,
-        norm(Ψ_frozen_T[state_idxs] - Ψ_bare),
-        norm(Ψ_frozen_T[grad_idxs] - Ψ_ref[grad_idxs]),
+        norm(Ψ_frozen.state - Ψ_bare),
+        norm(Ψ_frozen.grad_states[1] - Ψ_ref.grad_states[1]),
+        n_flat,
+        norm(Ψ_flat.state - Ψ_bare),
+        norm(Ψ_flat.grad_states[1] - Ψ_ref.grad_states[1]),
     )
-end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">        |  bare | flat                        | frozen
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">        |  bare | frozen                      | flat
     tol | steps | steps    Δ state   grad err | steps    Δ state   grad err
-  1e-04 |    14 |    16   5.96e-05   1.59e-04 |    14   0.00e+00   6.14e-04
-  1e-06 |    28 |    34   5.72e-07   1.30e-06 |    28   0.00e+00   6.57e-06
-  1e-08 |    61 |    79   3.26e-09   8.69e-09 |    61   0.00e+00   4.50e-08
-  1e-10 |   147 |   192   2.29e-11   7.56e-11 |   147   0.00e+00   3.52e-10</code></pre><p>With the frozen norm, the solver takes the same time steps as for the state alone, and the state component is identical to the propagation of the state without gradients. The gradient is the derivative of the computed state, except for the dependence of the time steps on <span>$u$</span>, and its error is of the order of the propagation error. With the default (flat) norm, the gradient states contribute to the error estimate. The solver then takes more time steps, the state deviates from the propagation of the state alone within the tolerance, and the gradient is more accurate at the same tolerance.</p><p>Use the frozen norm when the state must agree exactly with a propagation without gradients, e.g., when a functional is evaluated from separately propagated states and its gradient from gradient vectors, or when the cost of each time step matters more than the accuracy of the gradient at a given tolerance. Use the default norm when the accuracy of the gradient should be controlled directly by the tolerance. The default norm of DifferentialEquations for the dual numbers of <a href="https://github.com/JuliaDiff/ForwardDiff.jl">ForwardDiff</a> also includes the dual parts, so forward-mode automatic differentiation through the solver follows the flat semantics as well.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../background/">Background »</a><div class="flexbox-break"></div><p class="footer-message"><a href="https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl">QuantumGradientGenerators.jl</a> v0.2.0-dev docs powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.20.0 on <span class="colophon-date" title="Sunday 22 November 2026 16:53">Sunday 22 November 2026</span>. Using Julia version 1.13.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  1e-04 |    14 |    14   0.00e+00   6.14e-04 |    16   5.96e-05   1.59e-04
+  1e-06 |    28 |    28   0.00e+00   6.57e-06 |    34   5.72e-07   1.30e-06
+  1e-08 |    61 |    61   0.00e+00   4.50e-08 |    79   3.26e-09   8.69e-09
+  1e-10 |   147 |   147   0.00e+00   3.52e-10 |   192   2.29e-11   7.56e-11</code></pre><p>With the default (frozen) norm, the solver takes the same time steps as for the state alone, and the state component is identical to the propagation of the state without gradients. The gradient is the derivative of the computed state, except for the dependence of the time steps on <span>$u$</span>. Its error is a few times the tolerance. With the flat norm, the gradient states contribute to the error estimate. The solver then takes more time steps, the state deviates from the propagation of the state alone within the tolerance, and the error of the gradient is about the tolerance. The flat norm is not more efficient per time step, though: in this example, tightening the tolerance of the frozen propagation by a factor of about 3 gives a gradient about as accurate as the flat one, at about the same number of time steps.</p><p>Keep the default when the state must agree exactly with a propagation without gradients, e.g., when a functional is evaluated from separately propagated states and its gradient from gradient vectors. Use the flat norm when the tolerance should bound the error of the gradient directly, without calibrating it.</p><p>The default is also what forward-mode automatic differentiation with the dual numbers of <a href="https://github.com/JuliaDiff/ForwardDiff.jl">ForwardDiff</a> does: for a complex state of dual numbers, the default error norm of OrdinaryDiffEq is itself a dual number, whose value is the norm of the values of the state, and the solver chooses its time steps from that value. The result is the same as for a gradient vector with the default norm, except that rounding errors in the error estimate can occasionally change the acceptance of a time step at the threshold of the tolerance, and with it the subsequent time steps.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../background/">Background »</a><div class="flexbox-break"></div><p class="footer-message"><a href="https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl">QuantumGradientGenerators.jl</a> v0.2.0-dev docs powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.20.0 on <span class="colophon-date" title="Monday 23 November 2026 02:09">Monday 23 November 2026</span>. Using Julia version 1.13.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
