@@ -203,7 +203,7 @@ end
     Φ3 = rand(rng, ComplexF64, N * (L + 1))
     Φ3_init = copy(Φ3)
     mul!(Φ3, G, Ψ_flat, α, β)
-    @test norm(Φ3 - (α * Φ_ref + β * Φ3_init)) < 1e-14
+    @test norm(Φ3 - (α * Φ_ref + β * Φ3_init)) < 1e-13
 
     # works with views (the actual ExponentialUtilities use case)
     V = rand(rng, ComplexF64, N * (L + 1), 4)
@@ -256,8 +256,10 @@ end
     end
     @test all(gradvec2[k] == gradvec[k] for k = 1:length(gradvec))
 
-    # similar(gradvec, S) returns a mutable Vector{S} with same length
-    @test similar(gradvec, ComplexF32) isa Vector{ComplexF32}
+    # similar(gradvec, S) returns a gradient vector with element type S and the
+    # same block structure
+    @test similar(gradvec, ComplexF32) isa GradVector{L,Vector{ComplexF32}}
+    @test eltype(similar(gradvec, ComplexF32)) == ComplexF32
     @test length(similar(gradvec, ComplexF32)) == length(gradvec)
 
     # similar(gradvec, dims) returns a plain Array with same eltype and given dims

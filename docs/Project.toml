@@ -1,5 +1,4 @@
 [deps]
-DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 DocumenterCitations = "daee34ce-89f3-4625-b898-19384cb65244"
 DocumenterInterLinks = "d12716ef-a0f6-4df4-a9f1-a5a34e75c656"
@@ -15,7 +14,6 @@ QuantumPropagators = "7bf12567-5742-4b91-a078-644e72a65fc1"
 QuantumGradientGenerators = {path = ".."}
 
 [compat]
-DiffEqBase = "6, 7"
 Documenter = "1.18"
 DocumenterCitations = "1.5"
 DocumenterInterLinks = "1.1"
