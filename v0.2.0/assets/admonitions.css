@@ -1,0 +1,13 @@
+/*
+ * SPDX-FileCopyrightText: © 2026 Michael Goerz <mail@michaelgoerz.net>
+ *
+ * SPDX-License-Identifier: MIT OR CC0-1.0
+ */
+
+/* A link to an anchor `[](@id ...)` at the start of an admonition body (e.g.,
+ * a proposition) should show the admonition's title, not scroll it under the
+ * top bar. The top bar's own height is already accounted for by its
+ * `scroll-padding-top`. */
+.admonition-body span[id] {
+    scroll-margin-top: 3rem;
+}
