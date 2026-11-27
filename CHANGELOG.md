@@ -14,6 +14,8 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 
 ## [Unreleased]
 
+* Changed: QuantumGradientGenerators now requires QuantumControl 0.12 (and thus QuantumPropagators 0.10)
+
 
 ## [v0.2.0] — 2026-11-22
 
