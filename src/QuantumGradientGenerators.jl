@@ -15,5 +15,6 @@ include("linalg.jl")
 include("broadcast.jl")
 include("spectral.jl")
 include("internalnorm.jl")
+include("recursive_array_tools.jl")
 
 end

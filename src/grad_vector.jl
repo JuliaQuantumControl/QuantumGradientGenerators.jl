@@ -10,31 +10,34 @@ import QuantumControl.QuantumPropagators.Interfaces:
 @doc raw"""Gradient vector for the dynamic gradient.
 
 ```julia
-Ψ = GradVector(state, num_controls)
+Ψ = GradVector(state, num_derivs)
 ```
 
-creates a gradient vector ``Ψ`` for ``L`` = `num_controls` controls. It
-corresponds to the block column vector
+creates a gradient vector ``Ψ`` for the derivatives with respect to ``K`` =
+`num_derivs` real variables ``x_1, \dots, x_K`` (controls or control
+parameters, see [`GradGenerator`](@ref)). It corresponds to the block column
+vector
 
 ```math
 Ψ = \begin{pmatrix}
-|Ψ^\prime_1⟩ \\ \vdots \\ |Ψ^\prime_L⟩ \\ |Ψ⟩
+|Ψ^\prime_1⟩ \\ \vdots \\ |Ψ^\prime_K⟩ \\ |Ψ⟩
 \end{pmatrix}\,,
 ```
 
-with the state ``|Ψ⟩`` in `Ψ.state` and the gradient states ``|Ψ^\prime_l⟩``
-in `Ψ.grad_states[l]`. Note that the gradient vector ``Ψ`` is written without
+with the state ``|Ψ⟩`` in `Ψ.state` and the gradient states ``|Ψ^\prime_k⟩``
+in `Ψ.grad_states[k]`. Note that the gradient vector ``Ψ`` is written without
 a ket, to distinguish it from the state ``|Ψ⟩``. Upon initialization,
 ``|Ψ⟩`` is a copy of `state`, and the gradient states are zero.
 
-With a matching gradient generator ``G = G[\hat{H}]``, see
+With a matching gradient generator ``G = G[\hat{H}]`` for the derivatives
+``\hat{μ}_k = \partial \hat{H} / \partial x_k``, see
 [`GradGenerator`](@ref), we have
 
 ```math
 G Ψ = \begin{pmatrix}
 \hat{H} |Ψ^\prime_1⟩ + \hat{μ}_1 |Ψ⟩ \\
 \vdots \\
-\hat{H} |Ψ^\prime_L⟩ + \hat{μ}_L |Ψ⟩ \\
+\hat{H} |Ψ^\prime_K⟩ + \hat{μ}_K |Ψ⟩ \\
 \hat{H} |Ψ⟩
 \end{pmatrix}
 ```
@@ -44,21 +47,21 @@ and
 ```math
 e^{-i G dt} \begin{pmatrix} 0 \\ \vdots \\ 0 \\ |Ψ⟩ \end{pmatrix}
 = \begin{pmatrix}
-\frac{\partial}{\partial ϵ_1} e^{-i \hat{H} dt} |Ψ⟩ \\
+\frac{\partial}{\partial x_1} e^{-i \hat{H} dt} |Ψ⟩ \\
 \vdots \\
-\frac{\partial}{\partial ϵ_L} e^{-i \hat{H} dt} |Ψ⟩ \\
+\frac{\partial}{\partial x_K} e^{-i \hat{H} dt} |Ψ⟩ \\
 e^{-i \hat{H} dt} |Ψ⟩
 \end{pmatrix}\,.
 ```
 """
-struct GradVector{num_controls,T}
+struct GradVector{num_derivs,T}
     state::T
     grad_states::Vector{T}
 end
 
-function GradVector(state::T, num_controls::Int64) where {T}
-    grad_states = [zero(state) for _ = 1:num_controls]
-    GradVector{num_controls,T}(copy(state), grad_states)
+function GradVector(state::T, num_derivs::Int64) where {T}
+    grad_states = [zero(state) for _ = 1:num_derivs]
+    GradVector{num_derivs,T}(copy(state), grad_states)
 end
 
 
@@ -87,14 +90,14 @@ function resetgradvec!(Ψ::T) where {T<:GradVector}
             fill!(Ψ′, 0.0)
         end
     else
-        for l in eachindex(Ψ.grad_states)
-            Ψ.grad_states[l] = zero(Ψ.state)
+        for k in eachindex(Ψ.grad_states)
+            Ψ.grad_states[k] = zero(Ψ.state)
         end
     end
     return Ψ
 end
 
-function resetgradvec!(Ψ::GradVector{num_controls,T}, state::T) where {num_controls,T}
+function resetgradvec!(Ψ::GradVector{num_derivs,T}, state::T) where {num_derivs,T}
     copyto!(Ψ.state, state)
     resetgradvec!(Ψ)
 end
@@ -104,11 +107,11 @@ _exp_prop_convert_state(::GradVector) = Vector{ComplexF64}
 
 
 function Base.convert(
-    ::Type{GradVector{num_controls,T2}},
-    Ψ::GradVector{num_controls,T1}
-) where {T1,T2,num_controls}
+    ::Type{GradVector{num_derivs,T2}},
+    Ψ::GradVector{num_derivs,T1}
+) where {T1,T2,num_derivs}
     # Used, e.g., for Cheby initialization
-    return GradVector{num_controls,T2}(
+    return GradVector{num_derivs,T2}(
         convert(T2, Ψ.state),
         T2[convert(T2, Ψ′) for Ψ′ in Ψ.grad_states]
     )

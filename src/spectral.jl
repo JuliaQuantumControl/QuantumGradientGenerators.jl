@@ -5,14 +5,14 @@
 # Spectral properties of a gradient generator, evaluated from the dynamical
 # generator `G.H` alone. The gradient generator is block upper-triangular with
 # `G.H` in all diagonal blocks, so its characteristic polynomial is that of
-# `G.H` to the power `L+1`, see the "Properties of the gradient generator"
-# section of the Background page in the documentation.
+# `G.H` to the power `K+1` for `K` derivatives, see the "Properties of the
+# gradient generator" section of the Background page in the documentation.
 
 import LinearAlgebra
 import QuantumControl.QuantumPropagators.SpectralRange: specrange
 
 
-_num_blocks(::GradgenOperator{num_controls}) where {num_controls} = num_controls + 1
+_num_blocks(::GradgenOperator{num_derivs}) where {num_derivs} = num_derivs + 1
 
 
 function specrange(G::GradgenOperator, method::Val{:auto}; kwargs...)

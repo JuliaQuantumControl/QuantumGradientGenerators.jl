@@ -47,7 +47,9 @@ e^{-i G dt} \begin{pmatrix} 0 \\ \vdots \\ 0 \\ |Ψ⟩ \end{pmatrix}
 
 Any of the methods in [QuantumPropagators](https://github.com/JuliaQuantumControl/QuantumPropagators.jl) can evaluate this propagation. See the [Background](@ref QGG-Background) for a proof, the interpretation of gradient vectors as dual numbers in forward-mode automatic differentiation, and the generalization to time-dependent generators and to parameterized pulses. For a backward propagation, as in GRAPE, construct the gradient generator ``G[\hat{H}^\dagger]`` from the adjoint generator ``\hat{H}^\dagger``. Its last block column then contains ``\hat{μ}^\dagger_l``.
 
-In the code, a gradient generator `G` holds ``\hat{H}`` in `G.H` and ``\hat{μ}_l`` in `G.control_derivs[l]`, and a gradient vector `Ψ` holds ``|Ψ⟩`` in `Ψ.state` and ``|Ψ^\prime_l⟩`` in `Ψ.grad_states[l]`. A time-dependent [`GradGenerator`](@ref) evaluates to a static [`GradgenOperator`](@ref) for specific values of the controls.
+In the code, a gradient generator `G` holds ``\hat{H}`` in `G.H` and ``\hat{μ}_l`` in `G.derivs[l]`, and a gradient vector `Ψ` holds ``|Ψ⟩`` in `Ψ.state` and ``|Ψ^\prime_l⟩`` in `Ψ.grad_states[l]`. A time-dependent [`GradGenerator`](@ref) evaluates to a static [`GradgenOperator`](@ref) for specific values of the controls.
+
+Instead of the controls, the derivatives may be with respect to the [control parameters](@extref QuantumControl :label:`Control-Parameters`) ``u_1, \dots, u_M`` that the controls depend on, e.g., the coefficients of a CRAB expansion or the amplitude of an analytic pulse. Then, ``\hat{μ}_n = \partial \hat{H} / \partial u_n``, and propagating a gradient vector over the entire time interval yields the derivatives of the final state with respect to all parameters at once, as in GOAT [MachnesPRL2018](@cite). The gradient generator for the parameters `u = get_parameters(H)` is `GradGenerator(H, u)`. See the [how-to guide](@ref Howto-Parameters).
 
 ## Contents
 

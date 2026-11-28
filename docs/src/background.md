@@ -5,7 +5,7 @@
 
 # [Background](@id QGG-Background)
 
-This page derives the mathematical theory behind gradient generators. The central result is that propagating a gradient vector under a gradient generator yields the derivative of the propagated state with respect to the controls, exactly, and without any assumption on the time step. We prove this first for a single time step with a constant dynamical generator, then reinterpret the construction as forward-mode automatic differentiation with dual numbers, and finally extend it to time-dependent generators and to arbitrary control parameters, which is the foundation for methods like GOAT [MachnesPRL2018](@cite).
+This page derives the mathematical theory behind gradient generators. The central result is that propagating a gradient vector under a gradient generator yields the derivative of the propagated state with respect to the controls (or any other real variables that the dynamical generator depends on, such as control parameters), exactly, and without any assumption on the time step. We prove this first for a single time step with a constant dynamical generator, then reinterpret the construction as forward-mode automatic differentiation with dual numbers, and finally extend it to time-dependent generators and to arbitrary control parameters, which is the foundation for methods like GOAT [MachnesPRL2018](@cite).
 
 **Contents**
 
@@ -33,6 +33,8 @@ with ``\hbar = 1``, where the dynamical generator ``\hat{H}(t) = \hat{H}(\{ϵ_l(
 ```
 
 For linear controls, ``\hat{H} = \hat{H}_0 + \sum_l ϵ_l(t) \hat{H}_l``, the control derivatives are the static [control operators](@extref QuantumControl :label:`Control-Operator`), ``\hat{μ}_l = \hat{H}_l``. For non-linear controls, they depend on the values of the controls.
+
+Nothing in the construction of the gradient generator relies on the variables being controls. The ``ϵ_l`` may be any real variables that ``\hat{H}`` depends on differentiably, and ``\hat{μ}_l`` the derivatives of ``\hat{H}`` with respect to them. In particular, they may be the [control parameters](@extref QuantumControl :label:`Control-Parameters`) ``u_1, \dots, u_M`` that the controls depend on, as discussed in [Time-dependent generators and parameters](@ref Background-Time-Dependent). We write the derivations in terms of the controls ``ϵ_l``, since this is the setting of GRAPE.
 
 In a piecewise-constant propagation on a time grid ``t_0 = 0, t_1, \dots, t_{N_T} = T``, the time evolution of a single time step ``dt_n = t_n - t_{n-1}`` is ``\hat{U}_n = \exp[-\ii \hat{H}_n dt_n]``, with the generator ``\hat{H}_n`` evaluated for the values ``ϵ_{nl}`` of the controls on the ``n``'th interval. In GRAPE, these values (the [pulses](@extref QuantumControl :label:`Pulse`)) are the control parameters that are optimized. Gradient-based optimal control methods like GRAPE [KhanejaJMR2005](@cite) require the derivative ``\partial \hat{U}_n / \partial ϵ_{nl}`` applied to a state, see the [Background of the GRAPE documentation](@extref GRAPE :label:`GRAPE-Background`). The accuracy of this derivative is critical for convergence, in particular in combination with quasi-Newton methods [FouquieresJMR2011](@cite).
 
@@ -74,7 +76,7 @@ e^{-\ii G dt} \begin{pmatrix} 0 \\ \vdots \\ 0 \\ |Ψ⟩ \end{pmatrix}
 \end{equation}
 ```
 
-Any method that can propagate a state under ``\hat{H}`` can propagate a gradient vector under ``G``. In the code, a [`GradgenOperator`](@ref) implements Eq. \eqref{eq:gradgen-action} block by block, without ever forming the matrix in Eq. \eqref{eq:gradgen}, and a [`GradVector`](@ref) holds ``|Ψ⟩`` in `Ψ.state` and ``|Ψ^\prime_l⟩`` in `Ψ.grad_states[l]`.
+Any method that can propagate a state under ``\hat{H}`` can propagate a gradient vector under ``G``. In the code, a [`GradgenOperator`](@ref) holds ``\hat{H}`` in `G.H` and ``\hat{μ}_l`` in `G.derivs[l]` and implements Eq. \eqref{eq:gradgen-action} block by block, without ever forming the matrix in Eq. \eqref{eq:gradgen}, and a [`GradVector`](@ref) holds ``|Ψ⟩`` in `Ψ.state` and ``|Ψ^\prime_l⟩`` in `Ψ.grad_states[l]`.
 
 
 ## [Reduction to a single control](@id Background-Reduction)
@@ -88,6 +90,8 @@ G_l = \begin{pmatrix} \hat{H} & \hat{μ}_l \\ 0 & \hat{H} \end{pmatrix}
 ```
 
 of dimension ``2N \times 2N``. This holds for arbitrary initial gradient states and for any kind of propagation: a single time step, a product of time steps, a polynomial propagator, or the solution of the equation of motion with a time-dependent ``G(t)``. The other gradient states have no influence on ``|Ψ^\prime_l⟩``. All ``L`` single-control problems share the same state, and propagating one gradient vector of dimension ``N(L+1)`` solves them all at once.
+
+If ``\hat{H}`` does not depend on ``ϵ_l``, then ``\hat{μ}_l = 0``, and the gradient state ``|Ψ^\prime_l⟩`` evolves freely under ``\hat{H}``, remaining zero if it starts at zero. This happens, e.g., when the gradient is taken with respect to all the controls of a control problem with several trajectories, each of which depends on only some of the controls. Including such a zero block keeps the index ``l`` of a gradient state identical to the index of the control. In the code, a zero block is a derivative `nothing`, which costs nothing to apply.
 
 From here on, we consider a single control ``ϵ``, with ``G = \left(\begin{smallmatrix} \hat{H} & \hat{μ} \\ 0 & \hat{H} \end{smallmatrix}\right)`` and ``Ψ = (|Ψ^\prime⟩, |Ψ⟩)``.
 
@@ -542,7 +546,9 @@ The propagation under ``G_u(t)`` evaluates this integral without discretizing it
 
 ### [Parameterized controls](@id Background-Parameters)
 
-For ``M`` control parameters ``u_1, \dots, u_M``, the gradient generator has the same structure as Eq. \eqref{eq:gradgen}, with ``\partial_{u_n} \hat{H}(t)`` in place of ``\hat{μ}_l``, and acts on gradient vectors ``Ψ = (|Ψ^\prime_1⟩, \dots, |Ψ^\prime_M⟩, |Ψ⟩)`` of dimension ``N(M+1)``. As in the [reduction to a single control](@ref Background-Reduction), the pair ``(|Ψ^\prime_n(t)⟩, |Ψ(t)⟩)`` evolves under the single-parameter generator ``G_{u_n}(t)``. By Eq. \eqref{eq:gradvec-u-prop}, propagating ``(0, \dots, 0, |Ψ(0)⟩)`` thus yields all ``M`` derivatives ``|Ψ^\prime_n(T)⟩ = \partial_{u_n} |Ψ(T)⟩`` at once.
+For ``M`` control parameters ``u_1, \dots, u_M``, the gradient generator has the same structure as Eq. \eqref{eq:gradgen}, with ``\hat{μ}_n(t) = \partial_{u_n} \hat{H}(t)`` in place of the control derivatives, and acts on gradient vectors ``Ψ = (|Ψ^\prime_1⟩, \dots, |Ψ^\prime_M⟩, |Ψ⟩)`` of dimension ``N(M+1)``. As in the [reduction to a single control](@ref Background-Reduction), the pair ``(|Ψ^\prime_n(t)⟩, |Ψ(t)⟩)`` evolves under the single-parameter generator ``G_{u_n}(t)``. By Eq. \eqref{eq:gradvec-u-prop}, propagating ``(0, \dots, 0, |Ψ(0)⟩)`` thus yields all ``M`` derivatives ``|Ψ^\prime_n(T)⟩ = \partial_{u_n} |Ψ(T)⟩`` at once.
+
+In the code, `GradGenerator(H, u)` constructs this gradient generator for the parameters `u = get_parameters(H)`, or for the parameters of a control problem, with ``\partial_{u_n} \hat{H}(t)`` in `G.derivs[n]`, see the [how-to guide](@ref Howto-Parameters). As for controls, the derivative with respect to a parameter that ``\hat{H}`` does not depend on is a zero block (`nothing`), so that the index ``n`` of a gradient state identifies the parameter ``u_n``.
 
 Typically, the parameters enter through the control functions ``ϵ_l(\{u_n\}, t)``, so that ``\hat{H}(t) = \hat{H}(\{ϵ_l(\{u_n\}, t)\})``. By the chain rule, the derivative of the generator is the [control derivative](@extref QuantumControl :label:`Control-Derivative`) times the [parameter derivative](@extref QuantumControl :label:`Parameter-Derivative`),
 
@@ -552,7 +558,7 @@ Typically, the parameters enter through the control functions ``ϵ_l(\{u_n\}, t)
 \end{equation}
 ```
 
-plus any explicit dependence of ``\hat{H}`` on ``u_n``. The blocks of the gradient generator are thus built from the same control derivatives ``\hat{μ}_l`` as for the gradient generator of the controls, with the scalar, time-dependent parameter derivatives as weights. Applying ``G(t)`` to a gradient vector requires ``M + 1`` applications of ``\hat{H}``, but only ``L`` applications of the ``\hat{μ}_l``.
+plus any explicit dependence of ``\hat{H}`` on ``u_n``. The blocks of the gradient generator are thus built from the same control derivatives ``\hat{μ}_l`` as for the gradient generator of the controls, with the scalar, time-dependent parameter derivatives as weights. In principle, applying ``G(t)`` to a gradient vector requires ``M + 1`` applications of ``\hat{H}``, but only ``L`` applications of the ``\hat{μ}_l``. The [`GradgenOperator`](@ref) does not exploit this structure: it applies each ``\partial_{u_n} \hat{H}`` separately.
 
 This is the setting of optimal control methods for analytic or otherwise parameterized control functions. GOAT [MachnesPRL2018](@cite) optimizes analytic control functions with few parameters by integrating the coupled equations of motion for ``\hat{U}`` and ``\partial_u \hat{U}`` forward in time with an ODE solver, [MachnesPRL2018; Eq. (7)](@cite), which is Eq. \eqref{eq:gradgen-u} with the order of the blocks reversed. GROUP [SorensenPRA2018](@cite) expands the control in a chopped basis, ``ϵ(t) = ϵ_0(t) + S(t) \sum_n u_n f_n(t)``, and GRAFS [LucarelliPRA2018](@cite) expands piecewise-constant controls in band-limited Slepian sequences. Both obtain the gradient with respect to the expansion coefficients from a GRAPE-type adjoint gradient via the chain rule, [SorensenPRA2018; Eq. (16)](@cite) and [LucarelliPRA2018; Eqs. (18, 19)](@cite). The gradient generator for the parameters ``u_n`` is the mathematical basis for implementing GOAT-type methods with `QuantumGradientGenerators`.
 
