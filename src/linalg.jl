@@ -450,34 +450,6 @@ function *(
 end
 
 
-@inline function convert_gradgen_to_dense(G::GradGenerator)
-    N = size(G.H)[1]
-    K = length(G.derivs)
-    G_full = zeros(eltype(G.H), N * (K + 1), N * (K + 1))
-    convert_gradgen_to_dense!(G_full, G)
-end
-
-
-@inline function convert_gradgen_to_dense!(G_full, G::GradGenerator)
-    N = size(G.H)[1]
-    K = length(G.derivs)
-    @inbounds for i = 1:(K+1)
-        G_full[((i-1)*N+1):(i*N), ((i-1)*N+1):(i*N)] .= G.H
-    end
-    # Set the derivatives in the last (block-)column
-    @inbounds for k = 1:K
-        μ = G.derivs[k]
-        block = view(G_full, ((k-1)*N+1):(k*N), (K*N+1):((K+1)*N))
-        if isnothing(μ)
-            fill!(block, 0)  # zero block
-        else
-            block .= μ
-        end
-    end
-    return G_full
-end
-
-
 @inline function convert_gradvec_to_dense(Ψ)
     N = length(Ψ.state)
     K = length(Ψ.grad_states)
