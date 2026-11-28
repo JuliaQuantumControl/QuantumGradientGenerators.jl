@@ -13,6 +13,11 @@ using SafeTestsets
         include("test_gradgen.jl")
     end
 
+    print("\n* Control Parameters (test_parameters.jl):")
+    @time @safetestset "Control Parameters" begin
+        include("test_parameters.jl")
+    end
+
     print("\n* Spectral Radius (test_specrad.jl):")
     @time @safetestset "Spectral Radius" begin
         include("test_specrad.jl")

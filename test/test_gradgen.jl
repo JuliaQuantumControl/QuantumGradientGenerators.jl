@@ -36,7 +36,7 @@ using QuantumPropagators.Controls: evaluate
     G = evaluate(G_of_t; vals_dict)
     Ĥ = evaluate(Ĥ_of_t; vals_dict)
 
-    G2 = GradgenOperator(G.H, G.control_derivs)
+    G2 = GradgenOperator(G.H, G.derivs)
     @test G2 == G
 
     Û_Ψ₀ = exp(-𝕚 * Ĥ * dt) * Ψ₀

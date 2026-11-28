@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-using QuantumControl.Controls: get_control_derivs
+using QuantumControl.Controls: get_control_derivs, get_parameter_derivs
+using RecursiveArrayTools: ArrayPartition
 import QuantumControl.QuantumPropagators.Controls: get_controls
 import QuantumControl.QuantumPropagators.Controls: get_parameters
 import QuantumControl.QuantumPropagators: _exp_prop_convert_operator
@@ -12,49 +13,118 @@ import QuantumControl.QuantumPropagators: _exp_prop_convert_operator
 
 ```julia
 G_of_t = GradGenerator(H)
+G_of_t = GradGenerator(H, controls)
+G_of_t = GradGenerator(H, parameters)
 ```
 
 for a time-dependent dynamical generator `H` (a Hamiltonian or Liouvillian
-``\hat{H}(t)``) that depends on the controls ``ϵ_1(t), \dots, ϵ_L(t)``,
-constructs the gradient generator ``G[\hat{H}](t)``. It contains `H` in
-`G_of_t.H`, the control derivatives
-``\hat{μ}_l(t) = \partial \hat{H}/\partial ϵ_l(t)`` in
-`G_of_t.control_derivs`, and the controls in `G_of_t.controls`.
+``\hat{H}(t)``) constructs the gradient generator ``G[\hat{H}](t)`` for the
+derivatives with respect to a list of real variables ``x_1, \dots, x_K``.
+These are either controls ``ϵ_l(t)`` or control parameters ``u_n``. The
+resulting object contains `H` in `G_of_t.H`, the derivatives
+``\hat{μ}_k(t) = \partial \hat{H}/\partial x_k`` in `G_of_t.derivs`, and the
+variables in `G_of_t.wrt`.
 
-For a dynamical generator ``\hat{H}(t) = \hat{H}_0 + \sum_l ϵ_l(t) \hat{H}_l``,
-with ``\hat{μ}_l = \hat{H}_l``, the gradient generator encodes the block
-matrix
+With a single argument, the variables are the controls of `H`, as obtained
+from [`get_controls(H)`](@extref QuantumPropagators.Controls.get_controls).
+
+With `controls` (a tuple or vector of controls) as the second argument, the
+derivatives are the control derivatives from
+[`get_control_derivs(H, controls)`](@extref QuantumControl.Controls.get_control_derivs),
+and `G_of_t.wrt` is `collect(controls)`. This is for gradients with respect to
+the controls of a control problem, where each trajectory may depend on a
+different subset of the controls, in a different order.
+
+With `parameters` (a `RecursiveArrayTools.ArrayPartition`, as returned by
+[`get_parameters`](@extref QuantumPropagators.Controls.get_parameters)) as the
+second argument, the derivatives are the parameter derivatives from
+[`get_parameter_derivs(H, parameters)`](@extref QuantumControl.Controls.get_parameter_derivs),
+and `G_of_t.wrt` is `parameters` itself. This is for gradients with respect
+to the control parameters, e.g., `get_parameters(H)`, or
+`get_parameters(problem)` for a control problem. The derivatives evaluate to
+the current values of the parameters, so `G_of_t` remains valid when the
+values in `parameters` change, e.g., in an optimization. To obtain the
+derivatives with respect to the parameters in a single parameter block
+`block`, pass `combine_parameters(block)`.
+
+A derivative ``\hat{μ}_k`` is `nothing` if `H` does not depend on ``x_k``,
+e.g., for a control or a parameter of another trajectory of a control problem.
+In the gradient generator, it is a zero block, and the corresponding gradient
+state remains zero. Thus, the index ``k`` of a gradient state always
+identifies the variable `G_of_t.wrt[k]`.
+
+For ``K`` derivatives, the gradient generator encodes the block matrix
 
 ```math
 G[\hat{H}] = \begin{pmatrix}
     \hat{H}  &  0       &  \dots   &  0        &  \hat{μ}_1 \\
     0        &  \hat{H} &  \dots   &  0        &  \hat{μ}_2 \\
     \vdots   &          &  \ddots  &           &  \vdots      \\
-    0        &  0       &  \dots   &  \hat{H}  &  \hat{μ}_L \\
+    0        &  0       &  \dots   &  \hat{H}  &  \hat{μ}_K \\
     0        &  0       &  \dots   &  0        &  \hat{H}
 \end{pmatrix}\,.
 ```
 
-The control derivatives ``\hat{μ}_l`` may be time-dependent, to account for
-non-linear controls.
+For a dynamical generator ``\hat{H}(t) = \hat{H}_0 + \sum_l ϵ_l(t) \hat{H}_l``
+and derivatives with respect to the controls, ``\hat{μ}_l = \hat{H}_l``. The
+derivatives may be time-dependent, e.g., for non-linear controls, and the
+derivatives with respect to control parameters generally are.
 
 Plugging in values for the controls with
 [`evaluate`](@extref QuantumPropagators.Controls.evaluate) results in a static
 [`GradgenOperator`](@ref).
-"""
-struct GradGenerator{HT,CDT,CT}
-    H::HT
-    control_derivs::Vector{CDT}
-    controls::Vector{CT}
 
-    function GradGenerator(H::HT) where {HT}
-        controls = collect(get_controls(H))
-        control_derivs = get_control_derivs(H, controls)
-        CT = eltype(controls)
-        CDT = eltype(control_derivs)
-        new{HT,CDT,CT}(H, control_derivs, controls)
+```julia
+G_of_t = GradGenerator(H, derivs, wrt)
+```
+
+constructs the gradient generator directly from a vector `derivs` of
+derivatives (`nothing`, static operators, or time-dependent generators that
+can be evaluated with
+[`evaluate`](@extref QuantumPropagators.Controls.evaluate)), and the
+corresponding variables `wrt`, which are stored as-is.
+"""
+struct GradGenerator{HT,DT,WT}
+    H::HT
+    derivs::Vector{DT}
+    wrt::WT
+
+    function GradGenerator(H::HT, derivs::AbstractVector, wrt::WT) where {HT,WT}
+        if length(derivs) != length(wrt)
+            msg = "The number of derivatives ($(length(derivs))) does not match the number of variables in `wrt` ($(length(wrt)))"
+            throw(DimensionMismatch(msg))
+        end
+        derivs = collect(derivs)
+        DT = eltype(derivs)
+        new{HT,DT,WT}(H, derivs, wrt)
     end
 
+end
+
+
+GradGenerator(H) = GradGenerator(H, get_controls(H))
+
+
+function GradGenerator(H, controls)
+    controls = collect(controls)
+    return GradGenerator(H, get_control_derivs(H, controls), controls)
+end
+
+
+function GradGenerator(H, parameters::ArrayPartition)
+    return GradGenerator(H, get_parameter_derivs(H, parameters), parameters)
+end
+
+# Without this method, `GradGenerator(H, parameters)` would be ambiguous
+# for the (usual) `ArrayPartition` of real numbers
+function GradGenerator(H, parameters::ArrayPartition{<:Real})
+    return GradGenerator(H, get_parameter_derivs(H, parameters), parameters)
+end
+
+
+function GradGenerator(H, values::AbstractVector{<:Real})
+    msg = "`GradGenerator(H, wrt)` requires `wrt` to be a tuple or vector of controls, or the control parameters as returned by `get_parameters`, but received a vector of $(length(values)) real numbers. For a single control `ϵ`, pass `(ϵ,)`. For the parameters in a single parameter block `block`, pass `combine_parameters(block)`."
+    throw(ArgumentError(msg))
 end
 
 

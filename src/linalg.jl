@@ -6,11 +6,16 @@ import LinearAlgebra
 import Base: +, -, *
 
 
+# Add `α μ Ψ` to `Φ`, for a derivative `μ` that may be `nothing` (zero block)
+_add_deriv_mul!(Φ, μ, Ψ, α) = LinearAlgebra.mul!(Φ, μ, Ψ, α, true)
+_add_deriv_mul!(Φ, ::Nothing, Ψ, α) = Φ
+
+
 function LinearAlgebra.mul!(Φ::GradVector, G::GradgenOperator, Ψ::GradVector, α, β)
     LinearAlgebra.mul!(Φ.state, G.H, Ψ.state, α, β)
-    for l = 1:length(Ψ.grad_states)
-        LinearAlgebra.mul!(Φ.grad_states[l], G.H, Ψ.grad_states[l], α, β)
-        LinearAlgebra.mul!(Φ.grad_states[l], G.control_derivs[l], Ψ.state, α, 1)
+    for k = 1:length(Ψ.grad_states)
+        LinearAlgebra.mul!(Φ.grad_states[k], G.H, Ψ.grad_states[k], α, β)
+        _add_deriv_mul!(Φ.grad_states[k], G.derivs[k], Ψ.state, α)
     end
     return Φ
 end
@@ -24,24 +29,24 @@ end
 # Flat-vector dispatch used by ExponentialUtilities' Arnoldi iteration, which
 # builds its Krylov matrix via similar(b, T, (n, m+1)) → plain Matrix{T} and
 # then calls mul!(view(V,:,j+1), A, view(V,:,j)). The GradVector is treated as
-# a packed flat vector: blocks [Ψ′₁ | Ψ′₂ | … | Ψ′_L | Ψ_state], each of length N.
+# a packed flat vector: blocks [Ψ′₁ | Ψ′₂ | … | Ψ′_K | Ψ_state], each of length N.
 function LinearAlgebra.mul!(
     Φ::AbstractVector,
-    G::GradgenOperator{num_controls,HT,CDT},
+    G::GradgenOperator{num_derivs,HT,DT},
     Ψ::AbstractVector,
     α,
     β
-) where {num_controls,HT,CDT}
+) where {num_derivs,HT,DT}
     N = size(G.H, 1)
-    L = num_controls
-    Ψ_state = view(Ψ, (L*N+1):((L+1)*N))
-    for l = 1:L
-        Φ′ₗ = view(Φ, ((l-1)*N+1):(l*N))
-        Ψ′ₗ = view(Ψ, ((l-1)*N+1):(l*N))
-        LinearAlgebra.mul!(Φ′ₗ, G.H, Ψ′ₗ, α, β)
-        LinearAlgebra.mul!(Φ′ₗ, G.control_derivs[l], Ψ_state, α, 1)
+    K = num_derivs
+    Ψ_state = view(Ψ, (K*N+1):((K+1)*N))
+    for k = 1:K
+        Φ′ₖ = view(Φ, ((k-1)*N+1):(k*N))
+        Ψ′ₖ = view(Ψ, ((k-1)*N+1):(k*N))
+        LinearAlgebra.mul!(Φ′ₖ, G.H, Ψ′ₖ, α, β)
+        _add_deriv_mul!(Φ′ₖ, G.derivs[k], Ψ_state, α)
     end
-    Φ_state = view(Φ, (L*N+1):((L+1)*N))
+    Φ_state = view(Φ, (K*N+1):((K+1)*N))
     LinearAlgebra.mul!(Φ_state, G.H, Ψ_state, α, β)
     return Φ
 end
@@ -54,8 +59,8 @@ end
 
 function LinearAlgebra.lmul!(c, Ψ::GradVector)
     LinearAlgebra.lmul!(c, Ψ.state)
-    for l ∈ eachindex(Ψ.grad_states)
-        LinearAlgebra.lmul!(c, Ψ.grad_states[l])
+    for k ∈ eachindex(Ψ.grad_states)
+        LinearAlgebra.lmul!(c, Ψ.grad_states[k])
     end
     return Ψ
 end
@@ -63,8 +68,8 @@ end
 
 function LinearAlgebra.axpy!(a, X::GradVector, Y::GradVector)
     LinearAlgebra.axpy!(a, X.state, Y.state)
-    for l ∈ eachindex(X.grad_states)
-        LinearAlgebra.axpy!(a, X.grad_states[l], Y.grad_states[l])
+    for k ∈ eachindex(X.grad_states)
+        LinearAlgebra.axpy!(a, X.grad_states[k], Y.grad_states[k])
     end
     return Y
 end
@@ -73,8 +78,8 @@ end
 # The Euclidean norm of the block vector, consistent with `dot`
 function LinearAlgebra.norm(Ψ::GradVector)
     nrm_sq = LinearAlgebra.norm(Ψ.state)^2
-    for l ∈ eachindex(Ψ.grad_states)
-        nrm_sq += LinearAlgebra.norm(Ψ.grad_states[l])^2
+    for k ∈ eachindex(Ψ.grad_states)
+        nrm_sq += LinearAlgebra.norm(Ψ.grad_states[k])^2
     end
     return sqrt(nrm_sq)
 end
@@ -82,8 +87,8 @@ end
 
 function LinearAlgebra.dot(Ψ::GradVector, Φ::GradVector)
     c::ComplexF64 = LinearAlgebra.dot(Ψ.state, Φ.state)
-    for l ∈ eachindex(Ψ.grad_states)
-        c += LinearAlgebra.dot(Ψ.grad_states[l], Φ.grad_states[l])
+    for k ∈ eachindex(Ψ.grad_states)
+        c += LinearAlgebra.dot(Ψ.grad_states[k], Φ.grad_states[k])
     end
     return c
 end
@@ -94,26 +99,26 @@ function LinearAlgebra.dot(Ψ::GradVector, G::GradgenOperator, Φ::GradVector)
 end
 
 
-# A gradient generator is not normal unless all control derivatives are zero
+# A gradient generator is not normal unless all derivatives are zero
 LinearAlgebra.ishermitian(G::GradgenOperator) = false
 
 
 function Base.isreal(G::GradgenOperator)
-    return (isreal(G.H) && all(isreal(μ) for μ in G.control_derivs))
+    return (isreal(G.H) && all(isnothing(μ) || isreal(μ) for μ in G.derivs))
 end
 
 
 function Base.copyto!(dest::GradVector, src::GradVector)
     copyto!(dest.state, src.state)
-    for l = 1:length(src.grad_states)
-        copyto!(dest.grad_states[l], src.grad_states[l])
+    for k = 1:length(src.grad_states)
+        copyto!(dest.grad_states[k], src.grad_states[k])
     end
     return dest
 end
 
 
-function Base.copy(Ψ::GradVector{num_controls,T}) where {num_controls,T}
-    return GradVector{num_controls,T}(copy(Ψ.state), [copy(Ψ′) for Ψ′ in Ψ.grad_states])
+function Base.copy(Ψ::GradVector{num_derivs,T}) where {num_derivs,T}
+    return GradVector{num_derivs,T}(copy(Ψ.state), [copy(Ψ′) for Ψ′ in Ψ.grad_states])
 end
 
 
@@ -138,8 +143,8 @@ function Base.length(Ψ::T) where {T<:GradVector}
 end
 
 
-function _size(::Val{true}, Ψ::GradVector{num_controls,T}) where {num_controls,T}
-    return ((num_controls + 1) * length(Ψ.state),)
+function _size(::Val{true}, Ψ::GradVector{num_derivs,T}) where {num_derivs,T}
+    return ((num_derivs + 1) * length(Ψ.state),)
 end
 
 function _size(::Val{false}, Ψ::GradVector)
@@ -151,16 +156,12 @@ function Base.size(Ψ::T) where {T<:GradVector}
 end
 
 
-function _getindex(
-    ::Val{true},
-    Ψ::GradVector{num_controls,T},
-    k::Int
-) where {num_controls,T}
+function _getindex(::Val{true}, Ψ::GradVector{num_derivs,T}, k::Int) where {num_derivs,T}
     N = length(Ψ.state)
-    L = num_controls
+    K = num_derivs
     block = (k - 1) ÷ N + 1
     local_k = (k - 1) % N + 1
-    if block <= L
+    if block <= K
         return Ψ.grad_states[block][local_k]
     else
         return Ψ.state[local_k]
@@ -178,15 +179,15 @@ end
 
 function _setindex!(
     ::Val{true},
-    Ψ::GradVector{num_controls,T},
+    Ψ::GradVector{num_derivs,T},
     v,
     k::Int
-) where {num_controls,T}
+) where {num_derivs,T}
     N = length(Ψ.state)
-    L = num_controls
+    K = num_derivs
     block = (k - 1) ÷ N + 1
     local_k = (k - 1) % N + 1
-    if block <= L
+    if block <= K
         Ψ.grad_states[block][local_k] = v
     else
         Ψ.state[local_k] = v
@@ -231,19 +232,19 @@ function Base.eachindex(Ψ::T) where {T<:GradVector}
 end
 
 
-function Base.similar(Ψ::GradVector{num_controls,T}) where {num_controls,T}
+function Base.similar(Ψ::GradVector{num_derivs,T}) where {num_derivs,T}
     state_sim = similar(Ψ.state)
     grad_states_sim = [similar(Ψ′) for Ψ′ ∈ Ψ.grad_states]
-    return GradVector{num_controls,typeof(state_sim)}(state_sim, grad_states_sim)
+    return GradVector{num_derivs,typeof(state_sim)}(state_sim, grad_states_sim)
 end
 
 # A gradient vector with element type S. ODE solvers (OrdinaryDiffEq) use this
 # for the buffer of their error estimate, so it must have the block structure
 # of `Ψ` for the error norm to distinguish the state from the gradient states.
-function Base.similar(Ψ::GradVector{num_controls,T}, ::Type{S}) where {num_controls,T,S}
+function Base.similar(Ψ::GradVector{num_derivs,T}, ::Type{S}) where {num_derivs,T,S}
     state_sim = similar(Ψ.state, S)
     grad_states_sim = [similar(Ψ′, S) for Ψ′ ∈ Ψ.grad_states]
-    return GradVector{num_controls,typeof(state_sim)}(state_sim, grad_states_sim)
+    return GradVector{num_derivs,typeof(state_sim)}(state_sim, grad_states_sim)
 end
 
 # similar(Ψ, dims) calls eltype(Ψ) but not length/size, so no vector interface needed
@@ -260,22 +261,22 @@ Base.similar(::GradVector, ::Type{T}, dims::Tuple{Int}) where {T} =
 
 function Base.fill!(Ψ::GradVector, v)
     Base.fill!(Ψ.state, v)
-    for l = 1:length(Ψ.grad_states)
-        Base.fill!(Ψ.grad_states[l], v)
+    for k = 1:length(Ψ.grad_states)
+        Base.fill!(Ψ.grad_states[k], v)
     end
     return Ψ
 end
 
 
-function Base.size(G::GradgenOperator{num_controls,HT,CDT}) where {num_controls,HT,CDT}
-    return (num_controls + 1) .* size(G.H)
+function Base.size(G::GradgenOperator{num_derivs,HT,DT}) where {num_derivs,HT,DT}
+    return (num_derivs + 1) .* size(G.H)
 end
 
 function Base.size(
-    G::GradgenOperator{num_controls,HT,CDT},
+    G::GradgenOperator{num_derivs,HT,DT},
     dim::Integer
-) where {num_controls,HT,CDT}
-    return (num_controls + 1) * size(G.H, dim)
+) where {num_derivs,HT,DT}
+    return (num_derivs + 1) * size(G.H, dim)
 end
 
 
@@ -301,30 +302,32 @@ Base.similar(G::GradgenOperator, ::Type{S}, dims::Tuple{Vararg{Int}}) where {S} 
     Array{S}(undef, dims)
 
 
-function Base.eltype(
-    ::Type{GradgenOperator{num_controls,HT,CDT}}
-) where {num_controls,HT,CDT}
-    return promote_type(eltype(HT), eltype(CDT))
+function Base.eltype(::Type{GradgenOperator{num_derivs,HT,DT}}) where {num_derivs,HT,DT}
+    DT_blocks = _nonnothing_type(DT)  # `nothing` is a zero block
+    (DT_blocks === Union{}) && return eltype(HT)
+    return promote_type(eltype(HT), eltype(DT_blocks))
 end
 
 
 function _getindex(
     ::Val{true},
-    G::GradgenOperator{num_controls,HT,CDT},
+    G::GradgenOperator{num_derivs,HT,DT},
     row::Int,
     col::Int
-) where {num_controls,HT,CDT}
+) where {num_derivs,HT,DT}
     T = eltype(G)
     N, M = size(G.H)
-    L = num_controls
+    K = num_derivs
     block_row = (row - 1) ÷ N + 1
     block_col = (col - 1) ÷ M + 1
     local_row = (row - 1) % N + 1
     local_col = (col - 1) % M + 1
     if block_row == block_col
         return convert(T, G.H[local_row, local_col])
-    elseif block_col == L + 1 && block_row <= L
-        return convert(T, G.control_derivs[block_row][local_row, local_col])
+    elseif block_col == K + 1 && block_row <= K
+        μ = G.derivs[block_row]
+        isnothing(μ) && return zero(T)
+        return convert(T, μ[local_row, local_col])
     else
         return zero(T)
     end
@@ -370,90 +373,95 @@ function Base.iterate(G::T, k = 1) where {T<:GradgenOperator}
 end
 
 
-function Base.eltype(::Type{GradVector{num_controls,T}}) where {num_controls,T}
+function Base.eltype(::Type{GradVector{num_derivs,T}}) where {num_derivs,T}
     return eltype(T)
 end
 
 function Base.copyto!(dest::GradgenOperator, src::GradgenOperator)
     copyto!(dest.H, src.H)
-    copyto!(dest.control_derivs, src.control_derivs)
+    copyto!(dest.derivs, src.derivs)
 end
 
 
-function Base.zero(Ψ::GradVector{num_controls,T}) where {num_controls,T}
-    return GradVector{num_controls,T}(zero(Ψ.state), [zero(Ψ′) for Ψ′ ∈ Ψ.grad_states])
+function Base.zero(Ψ::GradVector{num_derivs,T}) where {num_derivs,T}
+    return GradVector{num_derivs,T}(zero(Ψ.state), [zero(Ψ′) for Ψ′ ∈ Ψ.grad_states])
 end
 
 
-function -(
-    Ψ::GradVector{num_controls,T},
-    Φ::GradVector{num_controls,T}
-) where {num_controls,T}
-    return GradVector{num_controls,T}(
+function -(Ψ::GradVector{num_derivs,T}, Φ::GradVector{num_derivs,T}) where {num_derivs,T}
+    return GradVector{num_derivs,T}(
         Ψ.state - Φ.state,
         [a - b for (a, b) in zip(Ψ.grad_states, Φ.grad_states)]
     )
 end
 
 
-function +(
-    Ψ::GradVector{num_controls,T},
-    Φ::GradVector{num_controls,T}
-) where {num_controls,T}
-    return GradVector{num_controls,T}(
+function +(Ψ::GradVector{num_derivs,T}, Φ::GradVector{num_derivs,T}) where {num_derivs,T}
+    return GradVector{num_derivs,T}(
         Ψ.state + Φ.state,
         [a + b for (a, b) in zip(Ψ.grad_states, Φ.grad_states)]
     )
 end
 
 
-function *(α::Number, Ψ::GradVector{num_controls,T}) where {num_controls,T}
-    return GradVector{num_controls,T}(α * Ψ.state, [(α * Ψ′) for Ψ′ in Ψ.grad_states])
+function *(α::Number, Ψ::GradVector{num_derivs,T}) where {num_derivs,T}
+    return GradVector{num_derivs,T}(α * Ψ.state, [(α * Ψ′) for Ψ′ in Ψ.grad_states])
 end
 
 
-function *(Ψ::GradVector{num_controls,T}, α::Number) where {num_controls,T}
+function *(Ψ::GradVector{num_derivs,T}, α::Number) where {num_derivs,T}
     return α * Ψ
 end
 
 
-function *(G::GradgenOperator{num_controls,HT,CDT}, α::Number) where {num_controls,HT,CDT}
-    GradgenOperator{num_controls,HT,CDT}(G.H * α, [μ * α for μ in G.control_derivs])
+_scale_deriv(μ, α) = μ * α
+_scale_deriv(::Nothing, α) = nothing
+
+
+function *(G::GradgenOperator{num_derivs,HT,DT}, α::Number) where {num_derivs,HT,DT}
+    GradgenOperator{num_derivs,HT,DT}(G.H * α, [_scale_deriv(μ, α) for μ in G.derivs])
 end
 
 *(α::Number, G::GradgenOperator) = *(G::GradgenOperator, α::Number)
 
 
 function *(
-    G::GradgenOperator{num_controls,HT,CDT},
-    Ψ::GradVector{num_controls,ST}
-) where {num_controls,HT,CDT,ST}
+    G::GradgenOperator{num_derivs,HT,DT},
+    Ψ::GradVector{num_derivs,ST}
+) where {num_derivs,HT,DT,ST}
     state = G.H * Ψ.state
     grad_states = [G.H * Ψ′ for Ψ′ in Ψ.grad_states]
-    for (l, μ) in enumerate(G.control_derivs)
-        grad_states[l] += μ * Ψ.state
+    for (k, μ) in enumerate(G.derivs)
+        isnothing(μ) && continue  # zero block
+        grad_states[k] += μ * Ψ.state
     end
-    return GradVector{num_controls,ST}(state, grad_states)
+    return GradVector{num_derivs,ST}(state, grad_states)
 end
 
 
 @inline function convert_gradgen_to_dense(G::GradGenerator)
     N = size(G.H)[1]
-    L = length(G.control_derivs)
-    G_full = zeros(eltype(G.H), N * (L + 1), N * (L + 1))
+    K = length(G.derivs)
+    G_full = zeros(eltype(G.H), N * (K + 1), N * (K + 1))
     convert_gradgen_to_dense!(G_full, G)
 end
 
 
 @inline function convert_gradgen_to_dense!(G_full, G::GradGenerator)
     N = size(G.H)[1]
-    L = length(G.control_derivs)
-    @inbounds for i = 1:(L+1)
+    K = length(G.derivs)
+    @inbounds for i = 1:(K+1)
         G_full[((i-1)*N+1):(i*N), ((i-1)*N+1):(i*N)] .= G.H
     end
-    # Set the control-derivatives in the last (block-)column
-    @inbounds for l = 1:L
-        G_full[((l-1)*N+1):(l*N), (L*N+1):((L+1)*N)] .= G.control_derivs[l]
+    # Set the derivatives in the last (block-)column
+    @inbounds for k = 1:K
+        μ = G.derivs[k]
+        block = view(G_full, ((k-1)*N+1):(k*N), (K*N+1):((K+1)*N))
+        if isnothing(μ)
+            fill!(block, 0)  # zero block
+        else
+            block .= μ
+        end
     end
     return G_full
 end
@@ -461,30 +469,30 @@ end
 
 @inline function convert_gradvec_to_dense(Ψ)
     N = length(Ψ.state)
-    L = length(Ψ.grad_states)
-    Ψ_full = zeros(ComplexF64, N * (L + 1))
+    K = length(Ψ.grad_states)
+    Ψ_full = zeros(ComplexF64, N * (K + 1))
     convert_gradvec_to_dense!(Ψ_full, Ψ)
 end
 
 
 @inline function convert_gradvec_to_dense!(Ψ_full, Ψ)
     N = length(Ψ.state)
-    L = length(Ψ.grad_states)
-    @inbounds for l = 1:L
-        Ψ_full[((l-1)*N+1):(l*N)] .= Ψ.grad_states[l]
+    K = length(Ψ.grad_states)
+    @inbounds for k = 1:K
+        Ψ_full[((k-1)*N+1):(k*N)] .= Ψ.grad_states[k]
     end
-    @inbounds Ψ_full[(L*N+1):((L+1)*N)] .= Ψ.state
+    @inbounds Ψ_full[(K*N+1):((K+1)*N)] .= Ψ.state
     return Ψ_full
 end
 
 
 @inline function convert_dense_to_gradvec!(Ψ, Ψ_full)
     N = length(Ψ.state)
-    L = length(Ψ.grad_states)
-    @inbounds for l = 1:L
-        Ψ.grad_states[l] .= Ψ_full[((l-1)*N+1):(l*N)]
+    K = length(Ψ.grad_states)
+    @inbounds for k = 1:K
+        Ψ.grad_states[k] .= Ψ_full[((k-1)*N+1):(k*N)]
     end
-    @inbounds Ψ.state .= Ψ_full[(L*N+1):((L+1)*N)]
+    @inbounds Ψ.state .= Ψ_full[(K*N+1):((K+1)*N)]
     return Ψ
 end
 
@@ -495,26 +503,27 @@ end
 
 
 function Base.convert(
-    ::Type{GradVector{num_controls,T}},
+    ::Type{GradVector{num_derivs,T}},
     vec::AbstractVector
-) where {num_controls,T}
-    L = num_controls
-    N = length(vec) ÷ (L + 1)  # dimension of state
-    @assert length(vec) == (L + 1) * N
-    grad_states = [convert(T, vec[((l-1)*N+1):(l*N)]) for l = 1:L]
-    state = convert(T, vec[(L*N+1):((L+1)*N)])
-    return GradVector{num_controls,T}(state, grad_states)
+) where {num_derivs,T}
+    K = num_derivs
+    N = length(vec) ÷ (K + 1)  # dimension of state
+    @assert length(vec) == (K + 1) * N
+    grad_states = [convert(T, vec[((k-1)*N+1):(k*N)]) for k = 1:K]
+    state = convert(T, vec[(K*N+1):((K+1)*N)])
+    return GradVector{num_derivs,T}(state, grad_states)
 end
 
 function Base.Array{T}(G::GradgenOperator) where {T}
     N, M = size(G.H)
-    L = length(G.control_derivs)
+    K = length(G.derivs)
     𝟘 = zeros(T, N, M)
-    μ = G.control_derivs
+    μ = [isnothing(μₖ) ? 𝟘 : Array{T}(μₖ) for μₖ in G.derivs]  # `nothing` is a zero block
     block_rows = [
-        hcat([𝟘 for j = 1:(l-1)]..., Array{T}(G.H), [𝟘 for j = (l+1):L]..., Array{T}(μ[l])) for l = 1:L
+        hcat([𝟘 for j = 1:(k-1)]..., Array{T}(G.H), [𝟘 for j = (k+1):K]..., μ[k]) for
+        k = 1:K
     ]
-    last_block_row = hcat([𝟘 for j = 1:L]..., Array{T}(G.H))
+    last_block_row = hcat([𝟘 for j = 1:K]..., Array{T}(G.H))
     return Base.Array{T}(vcat(block_rows..., last_block_row))
 end
 

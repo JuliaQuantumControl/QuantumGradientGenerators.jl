@@ -14,6 +14,15 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 
 ## [Unreleased]
 
+* Changed: The field `control_derivs` of `GradGenerator` and `GradgenOperator` is now `derivs`, since the derivatives may be with respect to controls or control parameters. To adapt, replace `G.control_derivs` with `G.derivs` for any gradient generator `G`
+* Changed: The field `controls` of `GradGenerator` is now `wrt`. It holds the controls or the parameters with respect to which the derivatives are taken. For `GradGenerator(H)`, it is the vector of the controls of `H`, as before. To adapt, replace `G.controls` with `G.wrt`, or use `get_controls(G)` for the controls of the dynamical generator
+* Changed: The third type parameter of `GradGenerator` is now the type of `wrt` (e.g., `Vector{Function}`) instead of the element type of the controls. This only affects code that specifies the type parameters of a `GradGenerator` explicitly
+* Changed: RecursiveArrayTools is now a dependency instead of a weak dependency, and the methods for ODE solvers that were in the RecursiveArrayTools extension are now part of the package
+* Added: `GradGenerator(H, controls)` for the gradient generator with respect to the given tuple or vector of controls, in the given order, using `get_control_derivs(H, controls)`. Unlike `GradGenerator(H)`, the gradient states then match the controls of a control problem, even if a trajectory depends on its controls in a different order, or only on some of them
+* Added: `GradGenerator(H, parameters)` for the gradient generator with respect to the control parameters (a `RecursiveArrayTools.ArrayPartition`, e.g., `get_parameters(H)` or `get_parameters(problem)`), using `get_parameter_derivs(H, parameters)` from QuantumControl. Propagating a gradient vector under this gradient generator yields the derivatives of the propagated state with respect to all control parameters at once, as in GOAT. The derivatives evaluate to the current values of the parameters, so the gradient generator remains valid while an optimizer changes the parameters. A vector of real numbers (e.g., a pulse, or a single parameter block) as the second argument throws an `ArgumentError`. For a single block, pass `combine_parameters(block)`
+* Added: `GradGenerator(H, derivs, wrt)`, to construct a gradient generator from given derivatives
+* Added: Derivatives that are `nothing` are supported in `GradGenerator` and `GradgenOperator`, as a zero block. These are the derivatives with respect to a control or a parameter that the dynamical generator does not depend on, so that the index of a gradient state always identifies the same control or parameter
+
 
 ## [v0.2.1] — 2026-11-27
 
