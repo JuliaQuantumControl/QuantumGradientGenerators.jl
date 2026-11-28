@@ -152,6 +152,16 @@ end
     # 3-arg dot(Ψ, G, Φ) matches dot(Ψ, G * Φ)
     Φ = GradVector(rand(rng, ComplexF64, N), L)
     @test dot(Ψ, G, Φ) ≈ dot(Ψ, G * Φ)
+    # ... also with non-zero gradient states, which the derivatives couple
+    Ψ₁ = GradVector(rand(rng, ComplexF64, N), L)
+    Φ₁ = GradVector(rand(rng, ComplexF64, N), L)
+    for l = 1:L
+        Ψ₁.grad_states[l] .= rand(rng, ComplexF64, N)
+        Φ₁.grad_states[l] .= rand(rng, ComplexF64, N)
+    end
+    @test dot(Ψ₁, G, Φ₁) ≈ dot(Ψ₁, G * Φ₁)
+    @test dot(Ψ₁, G, Φ₁) ≈
+          dot(convert(Vector{ComplexF64}, Ψ₁), dense * convert(Vector{ComplexF64}, Φ₁))
 
     # similar(G) returns a dense Array of the same eltype and size (matching Operator pattern)
     G_sim = similar(G)

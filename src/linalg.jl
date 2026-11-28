@@ -94,8 +94,19 @@ function LinearAlgebra.dot(Ψ::GradVector, Φ::GradVector)
 end
 
 
+# ⟨Ψ|μ|Φ⟩ for a derivative `μ` that may be `nothing` (zero block)
+_dot_deriv(Ψ, μ, Φ) = LinearAlgebra.dot(Ψ, μ, Φ)
+_dot_deriv(Ψ, ::Nothing, Φ) = false  # strong zero
+
+
 function LinearAlgebra.dot(Ψ::GradVector, G::GradgenOperator, Φ::GradVector)
-    return LinearAlgebra.dot(Ψ, G * Φ)
+    # Compute dot(Ψ, G * Φ) without forming the intermediate GradVector G * Φ
+    c = LinearAlgebra.dot(Ψ.state, G.H, Φ.state)
+    for k ∈ eachindex(Ψ.grad_states)
+        c += LinearAlgebra.dot(Ψ.grad_states[k], G.H, Φ.grad_states[k])
+        c += _dot_deriv(Ψ.grad_states[k], G.derivs[k], Φ.state)
+    end
+    return c
 end
 
 

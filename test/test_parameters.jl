@@ -324,6 +324,24 @@ end
     @test isreal(GradgenOperator(real(Ĥ), [real(μ̂₁), nothing]))
     @test isreal(GradgenOperator(real(Ĥ), [nothing, nothing]))
 
+    # With an `Operator` as the dynamical generator, and a control that it
+    # does not depend on
+    ϵ(t) = 0.4
+    ϵ_other(t) = 0.0
+    G_op = evaluate(GradGenerator(hamiltonian(Ĥ, (μ̂₁, ϵ)), (ϵ_other, ϵ)), 0.0)
+    @test isnothing(G_op.derivs[1])
+    Ψ₂ = GradVector(Ψ.state, 2)
+    Φ₂ = GradVector(Φ.state, 2)
+    for k = 1:2
+        Ψ₂.grad_states[k] .= Ψ.grad_states[k]
+        Φ₂.grad_states[k] .= Φ.grad_states[k]
+    end
+    @test dot(Φ₂, G_op, Ψ₂) ≈ dot(Φ₂, G_op * Ψ₂)
+    @test dot(Φ₂, G_op, Ψ₂) ≈ dot(
+        convert(Vector{ComplexF64}, Φ₂),
+        Array(G_op) * convert(Vector{ComplexF64}, Ψ₂)
+    )
+
     # All derivatives zero
     G₀ = GradgenOperator(Ĥ, [nothing, nothing])
     @test G₀ isa GradgenOperator{2,Matrix{ComplexF64},Nothing}
