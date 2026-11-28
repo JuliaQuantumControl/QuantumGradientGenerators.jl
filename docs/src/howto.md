@@ -92,6 +92,153 @@ norm(dχ[n] - dχ_fd)
     The gradient generator for the backward propagation is ``G[\hat{H}^\dagger]``, with ``\hat{μ}^\dagger`` in its upper right block. This is not the adjoint ``G[\hat{H}]^\dagger`` of the forward gradient generator, which is block *lower*-triangular. Propagating ``(0, |χ⟩)`` under ``G[\hat{H}]^\dagger`` leaves the gradient state at zero. For this reason, `QuantumGradientGenerators` does not define `adjoint` for a gradient generator. See [Adjoint](@ref Background-Adjoint) on the Background page for details.
 
 
+## [How to compute gradients with respect to control parameters](@id Howto-Parameters)
+
+The controls of a dynamical generator may depend on [control parameters](@extref QuantumControl :label:`Control-Parameters`) ``u_1, \dots, u_M``, e.g., the coefficients of a CRAB expansion, or a tunable frequency of the drift. Propagating a gradient vector under the gradient generator for the parameters over the entire time interval, without resetting the gradient states, yields the derivatives ``\partial_{u_n} |Ψ(T)⟩`` of the final state with respect to all parameters at once. This is the basis of GOAT [MachnesPRL2018](@cite), see [Parameterized controls](@ref Background-Parameters) on the Background page.
+
+Define a generator with two kinds of parameters: the coefficients of a [`CRABFunction`](@extref QuantumPropagators.ParameterizedFunctions.CRABFunction) as the control, and the energy of the upper level as a [`StaticParameter`](@extref QuantumPropagators.Controls.StaticParameter):
+
+```@example parameters
+using LinearAlgebra
+using QuantumPropagators: hamiltonian, propagate, ExpProp
+using QuantumPropagators.Controls: get_parameters, combine_parameters, StaticParameter
+using QuantumPropagators.ParameterizedFunctions: CRABFunction
+using QuantumGradientGenerators: GradGenerator, GradVector
+
+Ĥ₀ = ComplexF64[0 0 0; 0 1.0 0; 0 0 0]
+Ĥ₁ = ComplexF64[0 1 0; 1 0 √2; 0 √2 0]
+P̂₂ = ComplexF64[0 0 0; 0 0 0; 0 0 1]  # projector onto the upper level
+T = 5.0
+tlist = collect(range(0, T; length = 201))
+shape(t) = 0.3 * sin(π * t / T)^2
+# coefficients c⁽⁺⁾₁, c⁽⁺⁾₂, c⁽⁻⁾₁, c⁽⁻⁾₂
+crab = CRABFunction(2; frequencies = [0.6, 1.3], shape, parameters = [0.5, -0.3, 0.2, 0.4])
+w = [2.1]  # energy of the upper level
+H = hamiltonian(Ĥ₀, (P̂₂, StaticParameter(w, 1)), (Ĥ₁, crab))
+u = get_parameters(H)
+```
+
+The parameters `u` are a `RecursiveArrayTools.ArrayPartition` of the [parameter blocks](@extref QuantumPropagators :label:`ParameterBlocks`) `w` and `crab.parameters`. They are views into the blocks: changing `u[n]` changes the parameters of `H`. The gradient generator for these parameters is
+
+```@example parameters
+G = GradGenerator(H, u)
+nothing # hide
+```
+
+with the derivative ``\hat{μ}_n = \partial \hat{H} / \partial u_n`` in `G.derivs[n]`, as obtained from [`get_parameter_derivs`](@extref QuantumControl.Controls.get_parameter_derivs). The first derivative, with respect to the energy `w[1]`, is the static operator ``\hat{P}_2``. The derivatives with respect to the CRAB coefficients are time-dependent generators:
+
+```@example parameters
+G.derivs[1] == P̂₂
+```
+
+```@example parameters
+G.derivs[3]
+```
+
+The parameters are available as `G.wrt`, which is `u` itself:
+
+```@example parameters
+G.wrt === u
+```
+
+Propagate a gradient vector with one gradient state per parameter:
+
+```@example parameters
+Ψ₀ = ComplexF64[1, 0, 0]
+Ψ = propagate(GradVector(Ψ₀, length(u)), G, tlist; method = ExpProp)
+nothing # hide
+```
+
+The gradient state `Ψ.grad_states[n]` is the derivative ``\partial_{u_n} |Ψ(T)⟩`` of the final state. For the functional ``J_T = 1 - |τ|^2`` with the overlap ``τ = ⟨Ψ_{\text{tgt}}|Ψ(T)⟩``, the gradient is ``\partial J_T / \partial u_n = -2 \Re (τ^* ⟨Ψ_{\text{tgt}}|Ψ^\prime_n(T)⟩)``:
+
+```@example parameters
+Ψ_tgt = ComplexF64[0, 0, 1]
+τ = dot(Ψ_tgt, Ψ.state)
+∇J = [-2 * real(conj(τ) * dot(Ψ_tgt, Ψ′)) for Ψ′ in Ψ.grad_states]
+```
+
+To check the gradient, compare it with central finite differences. Changing an element of `u` changes the parameters of `H`:
+
+```@example parameters
+function J_T(H)
+    τ = dot(Ψ_tgt, propagate(Ψ₀, H, tlist; method = ExpProp))
+    return 1 - abs2(τ)
+end
+
+function fd_gradient(H, u; h = 1e-6)
+    ∇J_fd = zeros(length(u))
+    for n in eachindex(u)
+        u₀ = u[n]
+        u[n] = u₀ + h
+        J_plus = J_T(H)
+        u[n] = u₀ - h
+        J_minus = J_T(H)
+        u[n] = u₀
+        ∇J_fd[n] = (J_plus - J_minus) / 2h
+    end
+    return ∇J_fd
+end
+
+norm(∇J - fd_gradient(H, u))
+```
+
+The gradient generator reads the values of the parameters when it is evaluated, so it remains valid when an optimizer changes the parameters in place. There is no need to construct a new `GradGenerator` in each iteration:
+
+```@example parameters
+u .= u .+ 0.1  # e.g., an update by an optimizer
+Ψ = propagate(GradVector(Ψ₀, length(u)), G, tlist; method = ExpProp)
+τ = dot(Ψ_tgt, Ψ.state)
+∇J = [-2 * real(conj(τ) * dot(Ψ_tgt, Ψ′)) for Ψ′ in Ψ.grad_states]
+norm(∇J - fd_gradient(H, u))
+```
+
+The piecewise-constant propagation with `ExpProp` gives the exact derivative of the piecewise-constant approximation of the dynamics. For the time-continuous dynamics, propagate with an ODE solver over the entire time interval instead. See the [how-to guide for ODE solvers](@ref Howto-ODE) for the choice of the error norm:
+
+```@example parameters
+using OrdinaryDiffEq: OrdinaryDiffEq, Vern9
+
+Ψ = propagate(
+    GradVector(Ψ₀, length(u)),
+    G,
+    [0.0, T];
+    method = OrdinaryDiffEq,
+    alg = Vern9(),
+    reltol = 1e-10,
+    abstol = 1e-10
+)
+τ = dot(Ψ_tgt, Ψ.state)
+∇J_ode = [-2 * real(conj(τ) * dot(Ψ_tgt, Ψ′)) for Ψ′ in Ψ.grad_states]
+norm(∇J_ode - ∇J)
+```
+
+This gradient differs from the gradient `∇J` of the piecewise-constant propagation by the time discretization error of `tlist`.
+
+### Parameters of a control problem
+
+In a control problem with several trajectories, the gradient must be with respect to the parameters of the problem, while each trajectory may depend only on some of them. Pass the parameters of the problem to `GradGenerator` for the generator of each trajectory. With [QuantumControl](@extref QuantumControl :doc:`index`), these are `get_parameters(problem)`. Here, we combine the parameters of `H` with those of a second generator `H2`, which has its own CRAB control and the same upper-level energy `w`:
+
+```@example parameters
+crab2 = CRABFunction(1; frequencies = [0.9], shape, parameters = [0.3, -0.2])
+H2 = hamiltonian(Ĥ₀, (P̂₂, StaticParameter(w, 1)), (Ĥ₁, crab2))
+u_problem = combine_parameters(u, get_parameters(H2))
+G2 = GradGenerator(H2, u_problem)
+[isnothing(μ) for μ in G2.derivs]
+```
+
+The derivative of `H2` with respect to a parameter that it does not depend on is `nothing`, which the gradient generator treats as a zero block. The corresponding gradient state remains zero, so `Ψ.grad_states[n]` is the derivative with respect to `u_problem[n]` for every trajectory:
+
+```@example parameters
+Ψ = propagate(GradVector(Ψ₀, length(u_problem)), G2, tlist; method = ExpProp)
+[norm(Ψ′) for Ψ′ in Ψ.grad_states]
+```
+
+The same applies to the derivatives with respect to the controls of a control problem: `GradGenerator(H, controls)` takes the derivatives with respect to the given `controls`, in the given order, with `nothing` for any control that `H` does not depend on.
+
+!!! warning "Not a single parameter block"
+
+    The second argument of `GradGenerator` must be a list of controls or the result of `get_parameters`. A vector of numbers, such as a single parameter block `w`, is neither, and throws an `ArgumentError`. For the parameters in a single block, pass [`combine_parameters(w)`](@extref QuantumPropagators.Controls.combine_parameters).
+
+
 ## [How to propagate gradient vectors with the Chebychev propagator](@id Howto-Cheby)
 
 The [Chebychev propagator](@extref QuantumPropagators :label:`method_cheby`) works for gradient vectors without any extra configuration. The gradient states it produces are the exact derivative of the Chebychev propagation of the state, even when that propagation is inaccurate: a polynomial in the gradient generator with coefficients that do not depend on the control maps a gradient vector to the derivative of the same polynomial applied to the state ([Corollary 7](@ref Background-cor-polynomial)). This guide shows how to propagate a gradient vector and how to verify the gradient against finite differences.
