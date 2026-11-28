@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases).
 
 
-## [Unreleased]
+## [v0.2.1] — 2026-11-27
 
 * Changed: QuantumGradientGenerators now requires QuantumControl 0.12 (and thus QuantumPropagators 0.10)
 
@@ -97,7 +97,8 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 
 Initial public release
 
-[Unreleased]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/compare/v0.2.0..HEAD
+[Unreleased]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/compare/v0.2.1..HEAD
+[v0.2.1]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.2.1
 [v0.2.0]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.2.0
 [v0.1.10]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.1.10
 [v0.1.9]: https://github.com/JuliaQuantumControl/QuantumGradientGenerators.jl/releases/tag/v0.1.9
