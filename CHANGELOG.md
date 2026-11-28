@@ -24,6 +24,7 @@ Also see the [GitHub Releases](https://github.com/JuliaQuantumControl/QuantumGra
 * Added: `GradGenerator(H, derivs, wrt)`, to construct a gradient generator from given derivatives
 * Added: Derivatives that are `nothing` are supported in `GradGenerator` and `GradgenOperator`, as a zero block. These are the derivatives with respect to a control or a parameter that the dynamical generator does not depend on, so that the index of a gradient state always identifies the same control or parameter
 * Added: A how-to guide in the documentation for gradients with respect to control parameters. The "Background" page now states that the theory applies to derivatives with respect to any real variables, including control parameters, and how zero blocks keep the gradient states aligned with the controls or parameters of a control problem
+* Removed: `isreal` for a `GradgenOperator`. No propagation method uses it, and it threw a `MethodError` for a dynamical generator or derivative that is an `Operator` of QuantumPropagators. Code that needs it can check `isreal` for `G.H` and for each element of `G.derivs`
 
 
 ## [v0.2.1] — 2026-11-27

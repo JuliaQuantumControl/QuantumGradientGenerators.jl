@@ -114,11 +114,6 @@ end
 LinearAlgebra.ishermitian(G::GradgenOperator) = false
 
 
-function Base.isreal(G::GradgenOperator)
-    return (isreal(G.H) && all(isnothing(μ) || isreal(μ) for μ in G.derivs))
-end
-
-
 function Base.copyto!(dest::GradVector, src::GradVector)
     copyto!(dest.state, src.state)
     for k = 1:length(src.grad_states)

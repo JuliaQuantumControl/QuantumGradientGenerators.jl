@@ -320,10 +320,6 @@ end
     @test norm(Array(2.0 * G) - 2.0 * G_full) < 1e-12
     @test isnothing((G * 2.0).derivs[2])
 
-    @test !isreal(G)
-    @test isreal(GradgenOperator(real(Ĥ), [real(μ̂₁), nothing]))
-    @test isreal(GradgenOperator(real(Ĥ), [nothing, nothing]))
-
     # With an `Operator` as the dynamical generator, and a control that it
     # does not depend on
     ϵ(t) = 0.4

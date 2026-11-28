@@ -144,11 +144,6 @@ end
     mul!(Φ2, G, Ψ, true, false)
     @test norm(Φ1 - Φ2) < 1e-14
 
-    # isreal requires real values in all blocks
-    @test !isreal(G)
-    @test isreal(GradgenOperator(H, [real(μₗ) for μₗ in μ]))
-    @test !isreal(GradgenOperator(1im * H, [real(μₗ) for μₗ in μ]))
-
     # 3-arg dot(Ψ, G, Φ) matches dot(Ψ, G * Φ)
     Φ = GradVector(rand(rng, ComplexF64, N), L)
     @test dot(Ψ, G, Φ) ≈ dot(Ψ, G * Φ)
